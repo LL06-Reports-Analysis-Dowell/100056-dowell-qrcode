@@ -68,6 +68,15 @@ const linkQrcodeSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    activateBy:{
+        type: String,
+        required: true,
+        enum: ['customId', 'location']
+    },
+    link: {
+        type: String,
+        default: ''
+    },
     createdBy: {
         type: String,
         required: true

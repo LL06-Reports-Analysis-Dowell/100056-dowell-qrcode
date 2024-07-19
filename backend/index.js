@@ -1,11 +1,10 @@
-
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import routes from './src/routes/index.js';
 import { connectToDb } from './src/config/db.config.js';
 import config from './src/config/index.js';
-import { saveMongoDbWorker } from './src/config/workers.config.js';
+import { saveMongoDbWorker, updateDatacubeWorker } from './src/config/workers.config.js';
 
 const app = express();
 
@@ -34,24 +33,30 @@ const onListening = () => {
     console.log(`Listening on port ${config.PORT}`);
 };
 
-connectToDb().then(() => {
-    saveMongoDbWorker.on('completed', (job) => {
-        console.log(`Job completed with result: ${job.returnvalue}`);
+const initializeWorker = (worker, name) => {
+    worker.on('completed', (job) => {
+        console.log(`Job ${name} completed with result: ${job.returnvalue}`);
     });
 
-    saveMongoDbWorker.on('failed', (job, err) => {
-        console.error(`Job ${job.id} failed with error: ${err.message}`);
+    worker.on('failed', (job, err) => {
+        console.error(`Job ${name} ${job.id} failed with error: ${err.message}`);
     });
 
-    saveMongoDbWorker
+    worker
         .waitUntilReady()
         .then(() => {
-            console.log('Worker started successfully');
-            app.listen(config.PORT, onListening);
+            console.log(`${name} started successfully`);
         })
         .catch((error) => {
-            console.error('Failed to start worker:', error);
+            console.error(`Failed to start ${name}:`, error);
         });
+};
+
+connectToDb().then(() => {
+    initializeWorker(saveMongoDbWorker, 'saveMongoDbWorker');
+    initializeWorker(updateDatacubeWorker, 'updateDatacubeWorker');
+
+    app.listen(config.PORT, onListening);
 }).catch((error) => {
     console.error('Failed to connect to DB:', error);
 });

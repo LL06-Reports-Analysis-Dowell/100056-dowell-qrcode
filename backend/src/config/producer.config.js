@@ -40,6 +40,38 @@ const mongoDbProducerServices = async (dataArray) => {
     }
 };
 
+const updateDataInDatacubeQueue = new Queue('update-data-in-datacube', {
+    connection: {
+        host: config.redisHost,
+        port: config.redisPort,
+        password: config.redisPassword
+    }
+});
+
+const updateDatacubeService = async (data) => {
+    try {
+        const response = await updateDataInDatacubeQueue.add('update in datacube database', data);
+        console.log("Added data to update queue", response.id);
+        if (!response) {
+            return {
+                success: false,
+                message: `Failed to produce data to Datacube for item with id: ${data.childQrcodeId}`
+            };
+        } else {
+            return {
+                success: true,
+                message: `Data produced to Datacube successfully for item with id: ${data.childQrcodeId}`
+            };
+        }
+    } catch (error) {
+        return {
+            success: false,
+            message: `Error: ${error.message}`
+        };
+    }
+};
+
 export {
-    mongoDbProducerServices
+    mongoDbProducerServices,
+    updateDatacubeService
 };

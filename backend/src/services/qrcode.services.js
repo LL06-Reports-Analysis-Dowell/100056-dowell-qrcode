@@ -1,5 +1,6 @@
 import QRCode from 'qrcode';
-import { updaloadQrcodeImage, generateFileName } from '../utils/helper.js';
+import { generateFileName } from '../utils/helper.js';
+import { updaloadQrcodeImage } from '../services/api.services.js';
 import { productUrl } from '../utils/constant.js';
 
 const linkTypeQrcode = async (data, qrcodeColor = '#000000') => {
