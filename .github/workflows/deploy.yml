@@ -1,0 +1,32 @@
+name: Deploy to Server
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+    
+    
+    - name: Install sshpass
+      run: sudo apt-get install -y sshpass
+
+
+    - name: Deploy to Server
+      env:
+        SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
+      run: |
+        sshpass -p $SSH_PASSWORD ssh -o StrictHostKeyChecking=no root@205.209.110.252 << 'EOF'
+          cd /home/dowell/100056-dowell-qrcode
+          git pull origin main
+          docker-compose up -d --build
+        EOF
