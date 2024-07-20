@@ -22,6 +22,13 @@ app.get('/', (req, res) => {
     });
 });
 
+app.get('/health', (req, res) => {
+    return res.status(200).json({ 
+        success: true,
+        message: 'API services are running fine' 
+    });
+})
+
 app.all('*', (_req, res) => {
     return res.status(404).json({
         success: false,
