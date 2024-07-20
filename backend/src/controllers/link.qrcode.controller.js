@@ -245,7 +245,7 @@ const getChildQrcodes = asyncHandler(async(req,res)=>{
 })
 
 const activateQrcodeByMasterQrcode = asyncHandler(async (req, res) => {
-    const { masterQrcodeId } = req.query;
+    const { masterQrcodeId, workspaceId } = req.query;
 
     const apiKey = req.headers['authorization'];
     if (!apiKey || !apiKey.startsWith('Bearer ')) {
@@ -277,7 +277,6 @@ const activateQrcodeByMasterQrcode = asyncHandler(async (req, res) => {
     }
 
     if (response.length === 0) {
-        const workspaceId = (await getWorkSpaceId(apiKey.split(' ')[1]))?.workspaceId;
         const masterQrcodeResponse = await datacube.dataUpdate(
             `${workspaceId}_qrcode_database`,
             `${workspaceId}_master_qrcode_list_collection`,
@@ -305,7 +304,7 @@ const activateQrcodeByMasterQrcode = asyncHandler(async (req, res) => {
 
         return res.status(200).json({
             success: true,
-            message: "Activated successfully, all QR codes associated with this master QR code are inactive.",
+            message: "Activated successfully, all QR codes associated with this master QR code are active.",
         });
     }
 
@@ -438,7 +437,58 @@ const scanMasterQrcode = asyncHandler(async (req, res) => {
     }
 });
 
-// const scanChildQrcode = 
+const scanChildQrcode = asyncHandler(async (req, res) => {
+    const { childQrcodeId, latitude, longitude } = req.query;
+
+    const apiKey = req.headers['authorization'];
+    if (!apiKey || !apiKey.startsWith('Bearer ')) {
+        return res.status(401).json({
+            success: false,
+            message: "You are not authorized to access this resource",
+        });
+    }
+
+    const validatePayload = PayloadValidationServices.validateData(scanQrcodeSchema, {
+        qrcodeId: childQrcodeId,
+        latitude,
+        longitude
+    });
+
+    if (!validatePayload.isValid) {
+        return res.status(400).json({
+            success: false,
+            message: "Invalid payload",
+            errors: validatePayload.errors
+        });
+    }
+
+    const response = await LinkQrcode.findOne({ childQrcodeId, isActive: true });
+
+    if (!response) {
+        return res.status(404).json({
+            success: false,
+            message: `No child Qrcode found for this ${childQrcodeId}`
+        });
+    }
+
+    return res.status(200)
+    .json({
+        success: true,
+        message: "Scanned successfully",
+        response: {
+            childQrcodeLink: response.childQrcodeLink,
+            latitude: response.latitude,
+            longitude: response.longitude,
+            location: response.location,
+            fieldsData: response.fieldsData.reduce((acc, field) => {
+                acc[field.fieldName] = field.fieldValue;
+                return acc;
+            }, {}),
+            workspaceId: response.workspaceId
+        }
+    })
+    
+});
 
 
 export {
@@ -447,5 +497,6 @@ export {
     getChildQrcodes,
     activateQrcodeByMasterQrcode,
     updateChildQrocde,
-    scanMasterQrcode
+    scanMasterQrcode,
+    scanChildQrcode
 };

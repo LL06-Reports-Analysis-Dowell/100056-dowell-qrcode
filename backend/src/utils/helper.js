@@ -20,8 +20,37 @@ const createUUID = (qrType) => {
     }
 };
 
+const calculateDateRange = (range) => {
+    const endDate = new Date();
+    let startDate;
+
+    switch (range) {
+        case '7days':
+            startDate = new Date();
+            startDate.setDate(endDate.getDate() - 7);
+            break;
+        case '30days':
+            startDate = new Date();
+            startDate.setDate(endDate.getDate() - 30);
+            break;
+        case '90days':
+            startDate = new Date();
+            startDate.setDate(endDate.getDate() - 90);
+            break;
+        case '365days':
+            startDate = new Date();
+            startDate.setDate(endDate.getDate() - 365);
+            break;
+        default:
+            throw new Error('Invalid date range');
+    }
+
+    return { startDate, endDate };
+};
+
 
 export {
     generateFileName,
-    createUUID
+    createUUID,
+    calculateDateRange
 };
