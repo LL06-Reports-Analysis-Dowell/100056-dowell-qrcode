@@ -4,7 +4,7 @@ import cookieParser from 'cookie-parser';
 import routes from './src/routes/index.js';
 import { connectToDb } from './src/config/db.config.js';
 import config from './src/config/index.js';
-import { saveMongoDbWorker, updateDatacubeWorker } from './src/config/workers.config.js';
+import { saveMongoDbWorker, updateDatacubeWorker, saveStatsWorker } from './src/config/workers.config.js';
 
 const app = express();
 
@@ -55,6 +55,7 @@ const initializeWorker = (worker, name) => {
 connectToDb().then(() => {
     initializeWorker(saveMongoDbWorker, 'saveMongoDbWorker');
     initializeWorker(updateDatacubeWorker, 'updateDatacubeWorker');
+    initializeWorker(saveStatsWorker, 'saveStatsWorker');
 
     app.listen(config.PORT, onListening);
 }).catch((error) => {

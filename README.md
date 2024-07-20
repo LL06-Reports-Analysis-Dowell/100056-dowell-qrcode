@@ -52,34 +52,9 @@ Make sure you have Docker installed on your machine.
 - BullMQ
 - Redis
 
-## Project Structure
 
-```
-backend/
-├── src/
-    |── config/
-│   ├── controllers/
-│   ├── models/
-│   ├── routes/
-│   ├── services/
-│   ├── utils/
-│   └── index.js
-|   |__ Dockerfile
-├── .gitignore
-├── docker-compose.yml
-├── LICENSE
-└── README.md
-```
-
-## Environment Variables
-
-Make sure to set the following environment variables in your `.env` file:
-
-- `PORT`: Port on which the server will run.
-- `MONGO_URI`: MongoDB connection string.
-- `REDIS_URL`: Redis connection string.
-- `BULLMQ_QUEUE_NAME`: Name of the BullMQ queue.
-
+## Documentation
+- Click here for [Documentation](https://documenter.getpostman.com/view/26372308/2sA3kUG2Pr)
 
 ## Usage
 

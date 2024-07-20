@@ -43,9 +43,27 @@ const scanQrcodeSchema = z.object({
     latitude: z.string(),
     longitude: z.string()
 });
+
+const statsSchema = z.object({
+    workspaceId: z.string(),
+    qrcodeId: z.string(),
+    latitude: z.string(),
+    longitude: z.string()
+})
+
+const getAllStatsSchema = z.object({
+    workspaceId: z.string().nonempty({ message: "Workspace ID is required" }),
+    qrcodeId: z.string().optional(),
+    dateRange: z.enum(['7days', '30days', '90days', '365days', 'custom']).optional(),
+    startDate: z.string().optional(),
+    endDate: z.string().optional()
+});
+
 export {
     createCollectionSchema,
     linkqrcodeSchema,
     masterQrcodeRetrival,
-    scanQrcodeSchema
+    scanQrcodeSchema,
+    statsSchema,
+    getAllStatsSchema
 };
