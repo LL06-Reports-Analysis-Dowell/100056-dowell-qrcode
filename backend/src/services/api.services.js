@@ -27,23 +27,23 @@ const updaloadQrcodeImage = async (imgData, imgName = null) => {
     }
 };
 
-const getWorkSpaceId = async (apiKey) =>{
-    const response = await axios.get(`https://100105.pythonanywhere.com/api/v3/user/?type=get_api_key&api_key=${apiKey}`);
+const getUserAPIKey = async (workspaceId) =>{
+    const response = await axios.get(`https://100105.pythonanywhere.com/api/v3/user/?type=get_api_key&workspace_id=${workspaceId}`);
     
     if (!response.data.success) {
         return {
             success: false,
-            message: 'Failed to get workspace ID',
+            message: 'Failed to get api key for workspace ',
         }
     }
     return {
         success: true,
         message: 'Workspace ID fetched successfully',
-        workspaceId: response.data.data.workspaceId
+        apiKey: response.data.data.api_key
     };
 }
 
 export {
     updaloadQrcodeImage,
-    getWorkSpaceId
+    getUserAPIKey
 }

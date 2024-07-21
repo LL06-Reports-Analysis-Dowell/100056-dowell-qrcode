@@ -59,11 +59,24 @@ const getAllStatsSchema = z.object({
     endDate: z.string().optional()
 });
 
+const saveUserSchema = z.object({
+    username: z.string().min(3).max(50),
+    email: z.string().email(),
+    workspaceId: z.string()
+});
+
+const saveAgreementSchema = z.object({
+    workspaceId: z.string(),
+    userId: z.string()
+});
+
 export {
     createCollectionSchema,
     linkqrcodeSchema,
     masterQrcodeRetrival,
     scanQrcodeSchema,
     statsSchema,
-    getAllStatsSchema
+    getAllStatsSchema,
+    saveUserSchema,
+    saveAgreementSchema
 };

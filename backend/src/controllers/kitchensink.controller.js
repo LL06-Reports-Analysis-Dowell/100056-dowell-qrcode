@@ -2,6 +2,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import PayloadValidationServices from "../services/validation.services.js";
 import Datacubeservices from '../services/datacube.services.js';
 import { createCollectionSchema } from '../utils/payloadSchema.js';
+import User from '../models/auth.schema.js';
 
 
 const createCollection = asyncHandler(async (req,res)=>{
@@ -83,6 +84,23 @@ const checkDatabaseStatus = asyncHandler(async (req, res) => {
         });
     }
 
+    const updateUserData = await User.findOneAndUpdate(
+        { workspaceId },
+        {
+            $set: {
+                isDatabaseReady: true
+            }
+        },
+        { new: true }
+    )
+
+    if(!updateUserData){
+        return res.status(500).json({
+            success: false,
+            message: "Failed to update user database status"
+        });
+    }
+
     const listOfMetaDataCollection = [
         `${workspaceId}_child_qrcode_list_collection`,
         `${workspaceId}_master_qrcode_list_collection`,
@@ -102,6 +120,23 @@ const checkDatabaseStatus = asyncHandler(async (req, res) => {
             success: false,
             message: `The following collections are missing: ${missingCollectionsStr}`,
             response: missingCollections
+        });
+    }
+
+    const updateUserDataIsCollection = await User.findOneAndUpdate(
+        {workspaceId},
+        {
+            $set: {
+                isDatabaseReady: true,
+                isCollectionReady: true
+            }
+        }
+    )
+
+    if(!updateUserDataIsCollection){
+        return res.status(500).json({
+            success: false,
+            message: "Failed to update user collection status"
         });
     }
 

@@ -6,7 +6,6 @@ import { linkqrcodeSchema,masterQrcodeRetrival,scanQrcodeSchema } from "../utils
 import { createUUID } from "../utils/helper.js";
 import { mongoDbProducerServices,updateDatacubeService } from "../config/producer.config.js";
 import LinkQrcode from "../models/linkqrcode.schema.js";
-import { getWorkSpaceId } from "../services/api.services.js"
 
 const createQRcodeLiketype = asyncHandler(async (req, res) => {
     const {
@@ -489,7 +488,6 @@ const scanChildQrcode = asyncHandler(async (req, res) => {
     })
     
 });
-
 
 export {
     createQRcodeLiketype,
