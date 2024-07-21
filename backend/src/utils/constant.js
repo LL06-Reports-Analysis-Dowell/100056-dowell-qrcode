@@ -1,5 +1,5 @@
 // const productUrl = "http://localhost:5000"
-const productUrl = "www.qrcode.uxlivinglab.online"
+const productUrl = "https://www.qrcode.uxlivinglab.online"
 
 export {
     productUrl
