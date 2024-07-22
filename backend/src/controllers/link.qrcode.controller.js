@@ -461,12 +461,18 @@ const scanChildQrcode = asyncHandler(async (req, res) => {
         });
     }
 
-    const response = await LinkQrcode.findOne({ childQrcodeId, isActive: true });
+    const response = await LinkQrcode.findOne({ childQrcodeId });
 
     if (!response) {
         return res.status(404).json({
             success: false,
             message: `No child Qrcode found for this ${childQrcodeId}`
+        });
+    }
+    if (!response.isActive) {
+        return res.status(403).json({
+            success: false,
+            message: "QR code is not active"
         });
     }
 
@@ -489,6 +495,108 @@ const scanChildQrcode = asyncHandler(async (req, res) => {
     
 });
 
+const getMasterQrcodeDetails = asyncHandler(async (req, res) => {
+    const { masterQrcodeId, workspaceId} = req.query;
+
+    if (!masterQrcodeId || !workspaceId) {
+        return res.status(400).json({
+            success: false,
+            message: "Master QR code id and workspace id are required",
+        });
+    }
+
+    const apiKey = req.headers['authorization'];
+    if (!apiKey || !apiKey.startsWith('Bearer ')) {
+        return res.status(401).json({
+            success: false,
+            message: "You are not authorized to access this resource",
+        });
+    }
+
+    const datacube = new Datacubeservices(apiKey.split(' ')[1]);
+
+    const masterQrcodeDetails = await datacube.dataRetrieval(
+        `${workspaceId}_qrcode_database`,
+        `${workspaceId}_master_qrcode_list_collection`,
+        {
+            masterQrcodeId: masterQrcodeId,
+            workspaceId: workspaceId
+        },
+        1,
+        0
+    );
+
+    if (!masterQrcodeDetails.success) {
+        return res.status(400).json({
+            success: false,
+            message: "Failed to fetch master QR code details",
+        });
+    }
+
+    const masterData = masterQrcodeDetails.data;
+
+    if (!Array.isArray(masterData) || masterData.length === 0) {
+        return res.status(400).json({
+            success: false,
+            message: "Master QR code details are missing or in an incorrect format",
+        });
+    }
+
+    const master = masterData[0];
+
+    if (!master.listOfChildQrcodes || !Array.isArray(master.listOfChildQrcodes)) {
+        return res.status(400).json({
+            success: false,
+            message: "Child QR codes are missing or in an incorrect format",
+        });
+    }
+
+    const childQrcodeIds = master.listOfChildQrcodes.map(child => child.childQrcodeId);
+
+    const childQrcodeDetails = await LinkQrcode.find({
+        childQrcodeId: { $in: childQrcodeIds },
+        workspaceId: workspaceId
+    }).select('fieldsData childQrcodeLink childQrcodeImageUrl childQrcodeId isActive -_id');
+
+    if (!childQrcodeDetails || childQrcodeDetails.length === 0) {
+        return res.status(404).json({
+            success: false,
+            message: "No child QR codes found",
+        });
+    }
+    const response = {
+        masterQrcodeId: master.masterQrcodeId,
+        masterQrcodeImageUrl: master.masterQrcodeImageUrl,
+        masterQrcodeLink: master.masterQrcodeLink,
+        qrcodeType: master.qrcodeType,
+        latitude: master.latitude,
+        longitude: master.longitude,
+        location: master.location,
+        fieldsData: master.fieldsData,
+        activateBy: master.activateBy,
+        workspaceId: master.workspaceId,
+        createdBy: master.createdBy,
+        createdAt: master.createdAt,
+        childQrcodeDetails: master.listOfChildQrcodes.map(child => {
+            const childDetails = childQrcodeDetails.find(item => item.childQrcodeId === child.childQrcodeId);
+            return {
+                childQrcodeId: child.childQrcodeId,
+                childQrcodeImageUrl: child.childQrcodeImageUrl,
+                childQrcodeLink: child.childQrcodeLink,
+                isActive: childDetails.isActive,
+                fieldsData: childDetails.fieldsData
+            };
+        })
+    };
+
+    return res.status(200).json({
+        success: true,
+        message: "Fetched master and child QR code details successfully",
+        response
+    });
+});
+
+
 export {
     createQRcodeLiketype,
     getQrcodeWorkspaceWise,
@@ -496,5 +604,6 @@ export {
     activateQrcodeByMasterQrcode,
     updateChildQrocde,
     scanMasterQrcode,
-    scanChildQrcode
+    scanChildQrcode,
+    getMasterQrcodeDetails
 };

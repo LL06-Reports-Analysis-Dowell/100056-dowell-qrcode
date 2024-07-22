@@ -38,11 +38,9 @@ class Datacubeservices {
         };
         try {
             const response = await axios.post(url, payload);
-
             return response.data;
         } catch (error) {
-            console.error('Error in dataRetrieval:', error);
-            // throw error;
+            throw error;
         }
     }
 

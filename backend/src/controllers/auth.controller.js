@@ -82,18 +82,17 @@ const getUser = asyncHandler(async(req, res) => {
         { new: true }
     );
 
+    if(!updatedUser) {
+        return res.status(500).json({
+            success: false,
+            message: "Failed to update user login info"
+        });
+    }
     if(!user.isActive){
         return res.status(401)
         .json({
             success: false,
             message: "Please contact the administrator , You account has been disabled."
-        });
-    }
-
-    if(!updatedUser) {
-        return res.status(500).json({
-            success: false,
-            message: "Failed to update user login info"
         });
     }
 
