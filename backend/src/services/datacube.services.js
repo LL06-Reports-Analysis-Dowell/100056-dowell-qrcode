@@ -101,7 +101,11 @@ class Datacubeservices {
             });
             return response.data;
         } catch (error) {
-            throw error;
+            return {
+                success: false,
+                message: "Error retrieving collections",
+                error: error.message
+            };
         }
     }
     
