@@ -484,6 +484,8 @@ const scanChildQrcode = asyncHandler(async (req, res) => {
         message: "Scanned successfully",
         response: {
             childQrcodeLink: response.childQrcodeLink,
+            childQrcodeImageUrl: response.childQrcodeImageUrl,
+            childQrcodeId: response.childQrcodeId,
             latitude: response.latitude,
             longitude: response.longitude,
             location: response.location,

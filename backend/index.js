@@ -22,6 +22,10 @@ app.get('/', (req, res) => {
     });
 });
 
+app.get('/:id', (req, res) => {
+    res.redirect('https://ll06-reports-analysis-dowell.github.io/qrcode-scanner/');
+});
+
 app.get('/health', (req, res) => {
     return res.status(200).json({ 
         success: true,
