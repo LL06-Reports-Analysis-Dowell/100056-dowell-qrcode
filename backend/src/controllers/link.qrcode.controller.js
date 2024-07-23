@@ -596,7 +596,82 @@ const getMasterQrcodeDetails = asyncHandler(async (req, res) => {
     });
 });
 
+const deleteQrcodes = asyncHandler(async(req,res)=>{
+    const { workspaceId } = req.query;
 
+    if (!workspaceId) {
+        return res.status(400).json({
+            success: false,
+            message: "Workspace id is required",
+        });
+    }
+
+    const apiKey = req.headers['authorization'];
+    if (!apiKey || !apiKey.startsWith('Bearer ')) {
+        return res.status(401).json({
+            success: false,
+            message: "You are not authorized to access this resource",
+        });
+    }
+
+    const datacube = new Datacubeservices(apiKey.split(' ')[1]);
+
+    const masterQrcodeResponse = await datacube.dataDelete(
+        `${workspaceId}_qrcode_database`,
+        `${workspaceId}_master_qrcode_list_collection`,
+        { workspaceId: workspaceId }
+    );
+
+    if(!masterQrcodeResponse.success) {
+        return res.status(400).json({
+            success: false,
+            message: "Failed to delete master QR codes",
+        });
+    }
+
+    const qrcodeResponse = await datacube.dataDelete(
+        `${workspaceId}_qrcode_database`,
+        `${workspaceId}_child_qrcode_list_collection`,
+        { workspaceId: workspaceId }
+    )
+
+    if(!qrcodeResponse.success) {
+        return res.status(400).json({
+            success: false,
+            message: "Failed to delete child QR codes",
+        });
+    }
+
+    const responseLocalData = await LinkQrcode.deleteMany({
+        workspaceId: workspaceId
+    }) 
+
+    if(!responseLocalData) {
+        return res.status(400).json({
+            success: false,
+            message: "Failed to delete local data",
+        });
+    }
+
+    const statResponse = await datacube.dataDelete(
+        `${workspaceId}_qrcode_database`,
+        `${workspaceId}_qrcode_stat_collection`,
+        { workspaceId: workspaceId }
+    )
+
+    if(!statResponse.success) {
+        return res.status(400).json({
+            success: false,
+            message: "Failed to delete QR code statistics",
+        });
+    }
+
+    return res.status(200).json({
+        success: true,
+        message: "All Data has be deleted successfully",
+    });
+
+})
 export {
     createQRcodeLiketype,
     getQrcodeWorkspaceWise,
@@ -605,5 +680,6 @@ export {
     updateChildQrocde,
     scanMasterQrcode,
     scanChildQrcode,
-    getMasterQrcodeDetails
+    getMasterQrcodeDetails,
+    deleteQrcodes
 };

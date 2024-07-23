@@ -75,8 +75,11 @@ class Datacubeservices {
             const response = await axios.post(url, payload);
             return response.data;
         } catch (error) {
-            console.error('Error in createCollection:', error);
-            throw error;
+            return {
+                success: false,
+                message: "Error retrieving collections",
+                error: error.message
+            };
         }
     }
 

@@ -7,21 +7,12 @@ import { calculateDateRange } from "../utils/helper.js";
 
 
 const saveStats = asyncHandler(async(req,res)=>{
-    const { workspaceId, qrcodeId, latitude, longitude } = req.query
-
-    const apiKey = req.headers['authorization'];
-    if (!apiKey || !apiKey.startsWith('Bearer ')) {
-        return res.status(401).json({
-            success: false,
-            message: "You are not authorized to access this resource",
-        });
-    }
+    const { qrcodeId, latitude, longitude } = req.query
 
     const validatePayload = PayloadValidationServices.validateData(statsSchema, {
         qrcodeId,
         latitude,
         longitude,
-        workspaceId,
     });
 
     if (!validatePayload.isValid) {
@@ -31,16 +22,12 @@ const saveStats = asyncHandler(async(req,res)=>{
             errors: validatePayload.errors
         });
     }
-
     const dataToInsert = {
-        apiKey: apiKey.split(' ')[1],
         qrcodeId,
         latitude,
         longitude,
-        workspaceId,
         scannedAt: new Date().toISOString(),
     }
-
     saveStatsToCollection(dataToInsert)
 
     return res.status(200)

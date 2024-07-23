@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createQRcodeLiketype,getQrcodeWorkspaceWise,getChildQrcodes,activateQrcodeByMasterQrcode,updateChildQrocde,scanMasterQrcode,scanChildQrcode,getMasterQrcodeDetails } from "../controllers/link.qrcode.controller.js";
+import { createQRcodeLiketype,getQrcodeWorkspaceWise,getChildQrcodes,activateQrcodeByMasterQrcode,updateChildQrocde,scanMasterQrcode,scanChildQrcode,getMasterQrcodeDetails,deleteQrcodes } from "../controllers/link.qrcode.controller.js";
 
 const router = Router();
 
@@ -11,4 +11,5 @@ router.post("/update-child-qrcode",updateChildQrocde);
 router.get("/scan-master-qrcode",scanMasterQrcode);
 router.get("/scan-child-qrcode",scanChildQrcode);
 router.get("/master-qrcode",getMasterQrcodeDetails);
+router.delete("/delete-all-qrcodes",deleteQrcodes);
 export default router;

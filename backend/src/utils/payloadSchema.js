@@ -45,7 +45,6 @@ const scanQrcodeSchema = z.object({
 });
 
 const statsSchema = z.object({
-    workspaceId: z.string(),
     qrcodeId: z.string(),
     latitude: z.string(),
     longitude: z.string()
@@ -67,7 +66,9 @@ const saveUserSchema = z.object({
 
 const saveAgreementSchema = z.object({
     workspaceId: z.string(),
-    userId: z.string()
+    userId: z.string(),
+    isAccepted: z.boolean().optional().default(false),
+    isDataSyncedRequested: z.boolean().default(false),
 });
 
 export {
