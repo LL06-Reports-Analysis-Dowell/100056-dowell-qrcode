@@ -409,6 +409,8 @@ const scanMasterQrcode = asyncHandler(async (req, res) => {
 
     const filteredResponse = response.map(item => ({
         childQrcodeLink: item.childQrcodeLink,
+        childQrcodeImageUrl: item.childQrcodeImageUrl,
+        childQrcodeId: item.childQrcodeId,
         latitude: item.latitude,
         longitude: item.longitude,
         location: item.location,
@@ -672,6 +674,7 @@ const deleteQrcodes = asyncHandler(async(req,res)=>{
     });
 
 })
+
 export {
     createQRcodeLiketype,
     getQrcodeWorkspaceWise,
