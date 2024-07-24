@@ -369,14 +369,6 @@ const updateChildQrocde = asyncHandler(async(req,res)=>{
 const scanMasterQrcode = asyncHandler(async (req, res) => {
     const { masterQrcodeId, latitude, longitude } = req.query;
 
-    const apiKey = req.headers['authorization'];
-    if (!apiKey || !apiKey.startsWith('Bearer ')) {
-        return res.status(401).json({
-            success: false,
-            message: "You are not authorized to access this resource",
-        });
-    }
-
     const validatePayload = PayloadValidationServices.validateData(scanQrcodeSchema, {
         qrcodeId: masterQrcodeId,
         latitude,
@@ -441,13 +433,6 @@ const scanMasterQrcode = asyncHandler(async (req, res) => {
 const scanChildQrcode = asyncHandler(async (req, res) => {
     const { childQrcodeId, latitude, longitude } = req.query;
 
-    const apiKey = req.headers['authorization'];
-    if (!apiKey || !apiKey.startsWith('Bearer ')) {
-        return res.status(401).json({
-            success: false,
-            message: "You are not authorized to access this resource",
-        });
-    }
 
     const validatePayload = PayloadValidationServices.validateData(scanQrcodeSchema, {
         qrcodeId: childQrcodeId,
