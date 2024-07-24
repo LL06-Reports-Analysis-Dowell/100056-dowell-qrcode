@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 
 function generateFileName() {
-    const timestamp = Math.floor(Date.now() / 1000); // Using Unix timestamp in seconds
+    const timestamp = Date.now();
     const filename = `qrcode_${timestamp}.png`;
     return filename;
 }
