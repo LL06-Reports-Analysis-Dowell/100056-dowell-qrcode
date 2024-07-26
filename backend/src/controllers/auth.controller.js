@@ -22,6 +22,17 @@ const saveUser = asyncHandler(async(req,res)=>{
         });
     }
 
+    const existingUser = await User.findOne({
+        "email": email
+    })
+
+    if (existingUser) {
+        return res.status(400).json({
+            success: false,
+            message: "User already exists",
+        });
+    }
+
     const apiKey = await getUserAPIKey(workspaceId);
 
     if (!apiKey.success) {
@@ -30,6 +41,7 @@ const saveUser = asyncHandler(async(req,res)=>{
             message: "Failed to get user api key"
         });
     }
+
 
     const user = await User.create({
         username,
