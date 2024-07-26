@@ -3,7 +3,7 @@ import PayloadValidationServices from "../services/validation.services.js";
 import Datacubeservices from '../services/datacube.services.js';
 import { linkTypeQrcode } from "../services/qrcode.services.js";
 import { linkqrcodeSchema,masterQrcodeRetrival,scanQrcodeSchema } from "../utils/payloadSchema.js";
-import { createUUID } from "../utils/helper.js";
+import { createUUID, checkQrcodeDistance } from "../utils/helper.js";
 import { mongoDbProducerServices,updateDatacubeService } from "../config/producer.config.js";
 import LinkQrcode from "../models/linkqrcode.schema.js";
 
@@ -256,7 +256,7 @@ const activateQrcodeByMasterQrcode = asyncHandler(async (req, res) => {
 
     const datacube = new Datacubeservices(apiKey.split(' ')[1]);
 
-    if (!masterQrcodeId) {
+    if (!masterQrcodeId || !workspaceId) {
         return res.status(400).json({
             success: false,
             message: "Master QR code id is required",
@@ -274,6 +274,7 @@ const activateQrcodeByMasterQrcode = asyncHandler(async (req, res) => {
             message: "No QR Code found or something went wrong",
         });
     }
+
 
     if (response.length === 0) {
         const masterQrcodeResponse = await datacube.dataUpdate(
@@ -422,10 +423,28 @@ const scanMasterQrcode = asyncHandler(async (req, res) => {
     }
 
     if (activateBy === "location") {
+        const checkDistanceStatus = await checkQrcodeDistance(
+            5.0,
+            [latitude, longitude],
+            filteredResponse.map(item => [parseFloat(item.latitude), parseFloat(item.longitude)])
+        );
+
+        if (!checkDistanceStatus.success) {
+            return res.status(403).json({
+                success: false,
+                message: "Distance exceeded from the master QR code location",
+                errors: checkDistanceStatus.response
+            });
+        }
+
+        const withinDistanceQRCodes = filteredResponse.filter((item, index) => 
+            checkDistanceStatus.response.distance_data[index].within_distance
+        );
+
         return res.status(200).json({
             success: true,
             message: "Scanned successfully with location",
-            response: filteredResponse
+            response: withinDistanceQRCodes
         });
     }
 });

@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
+import { checkDistanceForQrcodeURL } from './constant.js';
 
 
 function generateFileName() {
@@ -49,8 +50,29 @@ const calculateDateRange = (range) => {
 };
 
 
+const checkQrcodeDistance = async (radius,referencePoint,locations) => {
+
+    const response = await axios.post(checkDistanceForQrcodeURL,{
+        radius,
+        reference_point: referencePoint,
+        locations
+    });
+    if (!response.data.success) {
+        return {
+            success: false,
+            message: 'Failed to check distance for QR codes',
+            error: response.data
+        }
+    }
+    return {
+        success: true,
+        message: 'Distance checked successfully',
+        response: response.data.results,
+    }
+}
 export {
     generateFileName,
     createUUID,
-    calculateDateRange
+    calculateDateRange,
+    checkQrcodeDistance
 };

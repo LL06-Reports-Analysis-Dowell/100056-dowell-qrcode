@@ -57,9 +57,17 @@ class Datacubeservices {
         };
         try {
             const response = await axios.put(url, payload);
-            return response.data;
+            return {
+                success: true,
+                message: "Data updated successfully",
+                response: response.data
+            }
         } catch (error) {
-            throw error;
+            return {
+                success: false,
+                message: "Error updating data",
+                error: error.message
+            };
         }
     }
 
