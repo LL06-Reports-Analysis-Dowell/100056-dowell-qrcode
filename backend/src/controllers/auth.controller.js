@@ -104,7 +104,8 @@ const getUser = asyncHandler(async(req, res) => {
         return res.status(401)
         .json({
             success: false,
-            message: "Please contact the administrator , You account has been disabled."
+            message: "Please contact the administrator , You account has been disabled.",
+            response: user
         });
     }
 
@@ -113,7 +114,8 @@ const getUser = asyncHandler(async(req, res) => {
         .json({
             success: false,
             message: "User's database is not ready, Please contact the administrator",
-            isDatabaseReady: user.isDatabaseReady
+            isDatabaseReady: user.isDatabaseReady,
+            response: user
         });
     }
 
@@ -122,7 +124,8 @@ const getUser = asyncHandler(async(req, res) => {
         .json({
             success: false,
             message: "User's collection is not ready, Please contact the administrator",
-            isCollectionReady: user.isCollectionReady
+            isCollectionReady: user.isCollectionReady,
+            response: user
         });
     }
 

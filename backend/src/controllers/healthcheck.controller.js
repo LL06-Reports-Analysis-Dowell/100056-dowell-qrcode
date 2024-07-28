@@ -5,7 +5,7 @@ const healthCheckService = asyncHandler(async (req,res) => {
     .status(200)
     .json({ 
         success: true,
-        message: "API services are running fine v2.0.3" 
+        message: "API services are running fine v3.01" 
     });
 
 });
