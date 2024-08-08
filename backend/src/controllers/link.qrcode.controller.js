@@ -2,7 +2,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import PayloadValidationServices from "../services/validation.services.js";
 import Datacubeservices from '../services/datacube.services.js';
 import { linkTypeQrcode } from "../services/qrcode.services.js";
-import { linkqrcodeSchema,masterQrcodeRetrival,scanQrcodeSchema } from "../utils/payloadSchema.js";
+import { linkqrcodeSchema,masterQrcodeRetrival,scanQrcodeSchema,myFridgeProtfolioSchema } from "../utils/payloadSchema.js";
 import { createUUID, checkQrcodeDistance } from "../utils/helper.js";
 import { mongoDbProducerServices,updateDatacubeService } from "../config/producer.config.js";
 import LinkQrcode from "../models/linkqrcode.schema.js";
@@ -681,6 +681,49 @@ const deleteQrcodes = asyncHandler(async(req,res)=>{
 
 })
 
+const getAllDataByProtfolioForFridgeApp = asyncHandler(async(req,res)=>{
+    const { workspaceId, protfolio } = req.body;
+
+    const validatePayload = PayloadValidationServices.validateData(myFridgeProtfolioSchema, {
+        workspaceId,
+        protfolio
+    });
+
+    if (!validatePayload.isValid) {
+        return res.status(400).json({
+            success: false,
+            message: "Invalid payload",
+            errors: validatePayload.errors
+        });
+    }
+
+    const qrcodeData = await LinkQrcode.find({
+        workspaceId: workspaceId,
+        isActive: true,
+        fieldsData: {
+            $elemMatch: {
+                fieldValue: protfolio
+            }
+        }
+    });
+    
+    if (!qrcodeData || qrcodeData.length === 0) {
+        res.status(404)
+        .json({
+            success: false,
+            message: "No QR codes found for this workspace and protfolio combination"
+        })
+    }
+
+    res.status(200)
+    .json({
+        success: true,
+        message: "Fetched all data successfully",
+        response: qrcodeData
+    })
+
+    
+})
 export {
     createQRcodeLiketype,
     getQrcodeWorkspaceWise,
@@ -690,5 +733,6 @@ export {
     scanMasterQrcode,
     scanChildQrcode,
     getMasterQrcodeDetails,
-    deleteQrcodes
+    deleteQrcodes,
+    getAllDataByProtfolioForFridgeApp
 };

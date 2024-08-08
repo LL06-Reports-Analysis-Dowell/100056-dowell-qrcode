@@ -71,6 +71,10 @@ const saveAgreementSchema = z.object({
     isDataSyncedRequested: z.boolean().default(false),
 });
 
+const myFridgeProtfolioSchema = z.object({
+    workspaceId: z.string(),
+    protfolio: z.string()
+})
 export {
     createCollectionSchema,
     linkqrcodeSchema,
@@ -79,5 +83,6 @@ export {
     statsSchema,
     getAllStatsSchema,
     saveUserSchema,
-    saveAgreementSchema
+    saveAgreementSchema,
+    myFridgeProtfolioSchema
 };
