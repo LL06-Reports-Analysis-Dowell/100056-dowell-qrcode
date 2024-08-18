@@ -66,5 +66,6 @@ const dowellLoginService = async (portfolio,password,workspace_name) => {
 }
 export {
     updaloadQrcodeImage,
-    getUserAPIKey
+    getUserAPIKey,
+    dowellLoginService
 }
