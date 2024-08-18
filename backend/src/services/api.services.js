@@ -43,6 +43,27 @@ const getUserAPIKey = async (workspaceId) =>{
     };
 }
 
+const dowellLoginService = async (portfolio,password,workspace_name) => {
+    const response = await axios.post("https://100093.pythonanywhere.com/api/portfoliologin",{
+        portfolio: portfolio,
+        password: password,
+        workspace_name: workspace_name,
+        username: "false"
+
+    });
+    if (!response.data.userinfo.workspace_name == workspace_name) {
+        return {
+            success: false,
+            message: 'Invalid portfolio or password',
+        }
+    }
+
+    return {
+        success: true,
+        message: 'Login successful',
+        userinfo: response.data
+    };
+}
 export {
     updaloadQrcodeImage,
     getUserAPIKey
