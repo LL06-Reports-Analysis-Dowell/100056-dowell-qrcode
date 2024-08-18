@@ -75,6 +75,13 @@ const myFridgeProtfolioSchema = z.object({
     workspaceId: z.string(),
     protfolio: z.string()
 })
+
+const savePortfolioSchema = z.object({
+    workspaceName: z.string(),
+    portfolioName: z.string().min(1).max(100),
+    password: z.string().min(6).max(100)
+});
+
 export {
     createCollectionSchema,
     linkqrcodeSchema,
@@ -84,5 +91,6 @@ export {
     getAllStatsSchema,
     saveUserSchema,
     saveAgreementSchema,
-    myFridgeProtfolioSchema
+    myFridgeProtfolioSchema,
+    savePortfolioSchema
 };

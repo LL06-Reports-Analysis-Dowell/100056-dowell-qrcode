@@ -43,18 +43,18 @@ const getUserAPIKey = async (workspaceId) =>{
     };
 }
 
-const dowellLoginService = async (portfolio,password,workspace_name) => {
-    const response = await axios.post("https://100093.pythonanywhere.com/api/portfoliologin",{
-        portfolio: portfolio,
+const dowellLoginService = async (portfolioName,password,workspaceName) => {
+    const response = await axios.post("https://100093.pythonanywhere.com/api/portfoliologin", {
+        portfolio: portfolioName,
         password: password,
-        workspace_name: workspace_name,
+        workspace_name: workspaceName,
         username: "false"
-
     });
-    if (!response.data.userinfo.workspace_name == workspace_name) {
+
+    if (!response.data.userinfo.workspace_name == workspaceName) {
         return {
             success: false,
-            message: 'Invalid portfolio or password',
+            message: 'Invalid portfolio or password' || response?.data?.message,
         }
     }
 
