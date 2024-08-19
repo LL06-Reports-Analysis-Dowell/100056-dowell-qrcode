@@ -4,12 +4,14 @@ services:
   mongo:
     container_name: mongo_container
     image: 'mongo'
-    ports:
-      - '27017:27017'
     volumes:
       - mongo-data:/data/db
     networks:
       - qr-net
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+    restart: always
 
   cache:
     container_name: cache_container
@@ -17,7 +19,7 @@ services:
     restart: always
     ports:
       - '6379:6379'
-    command: redis-server --save 20 1 --loglevel warning --requirepass eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81
+    command: redis-server --save 20 1 --loglevel warning --requirepass ${REDIS_PASSWORD}
     volumes:
       - cache:/data
     networks:
@@ -35,9 +37,15 @@ services:
       - mongo
       - cache
     environment:
-      REDIS_HOST: cache
-      REDIS_PORT: 6379
-      REDIS_PASSWORD: eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81
+      PORT: ${PORT}
+      MONGO_DB_URI: ${MONGO_DB_URI}
+      REFRESH_TOKEN_SECRET: ${REFRESH_TOKEN_SECRET}
+      REFRESH_TOKEN_EXPIRY: ${REFRESH_TOKEN_EXPIRY}
+      JWT_EXPIRY: ${JWT_EXPIRY}
+      JWT_SECRET: ${JWT_SECRET}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
     networks:
       - qr-net
 
