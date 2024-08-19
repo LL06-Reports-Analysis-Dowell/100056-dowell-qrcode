@@ -5,19 +5,23 @@ services:
     container_name: mongo_container
     image: 'mongo'
     ports:
-      - '27017:27017'
+      - '205.209.110.252:27017:27017'
     volumes:
       - mongo-data:/data/db
     networks:
       - qr-net
+    command: --bind_ip_all
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: mC7!P#t9sX$1VhL@
 
   cache:
     container_name: cache_container
     image: redis:latest
     restart: always
     ports:
-      - '6379:6379'
-    command: redis-server --save 20 1 --loglevel warning --requirepass eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81
+      - '205.209.110.252:6379:6379'
+    command: redis-server --save 20 1 --loglevel warning --requirepass 8fz@LkE#72dWvQ$R 
     volumes:
       - cache:/data
     networks:
@@ -37,7 +41,8 @@ services:
     environment:
       REDIS_HOST: cache
       REDIS_PORT: 6379
-      REDIS_PASSWORD: eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81
+      REDIS_PASSWORD: 8fz@LkE#72dWvQ$R 
+      MONGO_URI: mongodb://root:mC7!P#t9sX$1VhL@@mongo:27017/dowellqrcodegenerator
     networks:
       - qr-net
 
