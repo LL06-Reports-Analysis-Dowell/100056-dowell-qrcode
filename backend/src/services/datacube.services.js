@@ -3,7 +3,8 @@ import axios from 'axios';
 class Datacubeservices {
     constructor(apiKey) {
         this.apiKey = apiKey;
-        this.baseUrl = 'https://datacube.uxlivinglab.online/db_api';
+        // this.baseUrl = 'https://datacube.uxlivinglab.online/db_api';
+        this.baseUrl = 'https://www.dowelldatacube.uxlivinglab.online/db_api';
     }
 
     async dataInsertion(databaseName, collectionName, data) {
