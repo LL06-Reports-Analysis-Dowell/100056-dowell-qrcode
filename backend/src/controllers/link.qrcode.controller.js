@@ -786,11 +786,18 @@ const deactivateChildQRcode = asyncHandler(async (req, res) => {
 
     const datacube = new Datacubeservices(apiKey.split(' ')[1]);
 
-    const response = await LinkQrcode.findOneAndUpdate({
-        childQrcodeId,
-        workspaceId,
-        isActive: false
-    })
+    const response = await LinkQrcode.findOneAndUpdate(
+        {
+            childQrcodeId,
+            workspaceId
+        },
+        {
+            $set: { isActive: false }
+        },
+        {
+            new: true
+        }
+    );
 
     if (!response) {
         return res.status(404).json({
