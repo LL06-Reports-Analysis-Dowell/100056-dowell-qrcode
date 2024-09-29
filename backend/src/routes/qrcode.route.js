@@ -10,6 +10,7 @@ import {
   getMasterQrcodeDetails,
   deleteQrcodes,
   getAllDataByProtfolioForFridgeApp,
+  deactivateChildQRcode
 } from "../controllers/link.qrcode.controller.js";
 
 const router = Router();
@@ -24,4 +25,5 @@ router.get("/scan-child-qrcode", scanChildQrcode);
 router.get("/master-qrcode", getMasterQrcodeDetails);
 router.delete("/delete-all-qrcodes", deleteQrcodes);
 router.post("/child-qrcode-my-fridge", getAllDataByProtfolioForFridgeApp);
+router.get("/deactivate-qrcode", deactivateChildQRcode);
 export default router;

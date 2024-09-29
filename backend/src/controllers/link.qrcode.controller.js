@@ -4,14 +4,14 @@ import Datacubeservices from '../services/datacube.services.js';
 import { linkTypeQrcode } from "../services/qrcode.services.js";
 import { linkqrcodeSchema,masterQrcodeRetrival,scanQrcodeSchema,myFridgeProtfolioSchema } from "../utils/payloadSchema.js";
 import { createUUID, checkQrcodeDistance } from "../utils/helper.js";
-import { mongoDbProducerServices,updateDatacubeService } from "../config/producer.config.js";
+import { mongoDbProducerServices,updateDatacubeService, updateChildQrCodeActivationStatus } from "../config/producer.config.js";
 import LinkQrcode from "../models/linkqrcode.schema.js";
 
 const createQRcodeLiketype = asyncHandler(async (req, res) => {
     const {
         numberOfQrcode, qrcodeColor, createdBy,
         latitude, longitude, isActive,
-        location, fieldsData, workspaceId, activateBy
+        location, fieldsData, workspaceId, activateBy,productName
     } = req.body;
 
     const apiKey = req.headers['authorization'];
@@ -32,7 +32,8 @@ const createQRcodeLiketype = asyncHandler(async (req, res) => {
         location,
         fieldsData,
         workspaceId,
-        activateBy
+        activateBy,
+        productName
     });
 
     if (!validatePayload.isValid) {
@@ -45,10 +46,11 @@ const createQRcodeLiketype = asyncHandler(async (req, res) => {
 
     const datacube = new Datacubeservices(apiKey.split(' ')[1]);
 
+
     const masterQrcodeId = createUUID("masterQrcode");
     const childQrcodeIds = Array(numberOfQrcode).fill().map(() => createUUID("childQrcode"));
 
-    const masterQrcode = await linkTypeQrcode(masterQrcodeId, qrcodeColor);
+    const masterQrcode = await linkTypeQrcode(masterQrcodeId, qrcodeColor,productName);
     if (!masterQrcode.success) {
         return res.status(400).json({
             success: false,
@@ -58,7 +60,7 @@ const createQRcodeLiketype = asyncHandler(async (req, res) => {
 
     const childQrcodes = await Promise.all(
         childQrcodeIds.map(async (childQrcodeId) => {
-            const qr = await linkTypeQrcode(childQrcodeId, qrcodeColor);
+            const qr = await linkTypeQrcode(childQrcodeId, qrcodeColor,productName);
             return { childQrcodeId, ...qr };
         })
     );
@@ -86,6 +88,7 @@ const createQRcodeLiketype = asyncHandler(async (req, res) => {
         workspaceId,
         activateBy,
         createdBy,
+        productName,
         listOfChildQrcodes: childQrcodes.map(childQrcode => ({
             childQrcodeId: childQrcode.childQrcodeId,
             childQrcodeImageUrl: childQrcode.response.qrcodeUrl,
@@ -119,6 +122,8 @@ const createQRcodeLiketype = asyncHandler(async (req, res) => {
         qrcodeType: "link",
         latitude: "",
         longitude: "",
+        productName,
+        isUsed: false,
         isActive: false,
         location: "",
         fieldsData: fieldsData.map(field => ({ fieldName: field, fieldValue: "" })),
@@ -265,7 +270,8 @@ const activateQrcodeByMasterQrcode = asyncHandler(async (req, res) => {
 
     const response = await LinkQrcode.find({
         masterQrcodeId,
-        isActive: false
+        isActive: false,
+        isUsed: false
     });
 
     if (!response) {
@@ -333,7 +339,8 @@ const updateChildQrocde = asyncHandler(async(req,res)=>{
             isActive: true,
             location,
             latitude,
-            longitude
+            longitude,
+            isUsed: true
         },
         { new: true }
     );
@@ -352,6 +359,7 @@ const updateChildQrocde = asyncHandler(async(req,res)=>{
         latitude: response.latitude,
         longitude: response.longitude,
         isActive: response.isActive,
+        isUsed: response.isUsed,
         location: response.location,
         fieldsData: response.fieldsData,
     }
@@ -649,7 +657,8 @@ const deleteQrcodes = asyncHandler(async(req,res)=>{
             message: "Failed to delete child QR codes",
         });
     }
-
+    console.log("clearing all data...");
+    
     const responseLocalData = await LinkQrcode.deleteMany({
         workspaceId: workspaceId
     }) 
@@ -681,12 +690,13 @@ const deleteQrcodes = asyncHandler(async(req,res)=>{
 
 })
 
-const getAllDataByProtfolioForFridgeApp = asyncHandler(async(req,res)=>{
-    const { workspaceId, protfolio } = req.body;
+const getAllDataByProtfolioForFridgeApp = asyncHandler(async (req, res) => {
+    const { workspaceId, protfolio, dataType } = req.body;
 
     const validatePayload = PayloadValidationServices.validateData(myFridgeProtfolioSchema, {
         workspaceId,
-        protfolio
+        protfolio,
+        dataType
     });
 
     if (!validatePayload.isValid) {
@@ -697,32 +707,110 @@ const getAllDataByProtfolioForFridgeApp = asyncHandler(async(req,res)=>{
         });
     }
 
-    const qrcodeData = await LinkQrcode.find({
-        workspaceId: workspaceId,
-        isActive: true,
-        fieldsData: {
-            $elemMatch: {
-                fieldValue: protfolio
+    let dataToBeQueried;
+    if (dataType === "all") {
+        dataToBeQueried = {
+            workspaceId: workspaceId,
+            isUsed: true,
+            fieldsData: {
+                $elemMatch: {
+                    fieldValue: protfolio
+                }
             }
-        }
-    });
-    
-    if (!qrcodeData || qrcodeData.length === 0) {
-        res.status(404)
-        .json({
-            success: false,
-            message: "No QR codes found for this workspace and protfolio combination"
-        })
+        };
+    } else if (dataType === "active") {
+        dataToBeQueried = {
+            workspaceId: workspaceId,
+            isActive: true,
+            fieldsData: {
+                $elemMatch: {
+                    fieldValue: protfolio
+                }
+            }
+        };
+    } else if (dataType === "inactive") {
+        dataToBeQueried = {
+            workspaceId: workspaceId,
+            isActive: false,
+            fieldsData: {
+                $elemMatch: {
+                    fieldValue: protfolio
+                }
+            }
+        };
+    } else {
+        dataToBeQueried = {
+            workspaceId: workspaceId,
+            isActive: true,
+            fieldsData: {
+                $elemMatch: {
+                    fieldValue: protfolio
+                }
+            }
+        };
     }
 
-    res.status(200)
-    .json({
+    const qrcodeData = await LinkQrcode.find(dataToBeQueried);
+
+    if (!qrcodeData || qrcodeData.length === 0) {
+        return res.status(404).json({
+            success: false,
+            message: "No QR codes found for this workspace and portfolio combination"
+        });
+    }
+
+    res.status(200).json({
         success: true,
         message: "Fetched all data successfully",
         response: qrcodeData
+    });
+});
+
+const deactivateChildQRcode = asyncHandler(async (req, res) => {
+    const { childQrcodeId, workspaceId } = req.query;
+
+    if (!childQrcodeId || !workspaceId) {
+        return res.status(400).json({
+            success: false,
+            message: "Child QR code id and workspace id are required",
+        });
+    }
+
+    const apiKey = req.headers['authorization'];
+    if (!apiKey || !apiKey.startsWith('Bearer ')) {
+        return res.status(401).json({
+            success: false,
+            message: "You are not authorized to access this resource",
+        });
+    }
+
+    const datacube = new Datacubeservices(apiKey.split(' ')[1]);
+
+    const response = await LinkQrcode.findOneAndUpdate({
+        childQrcodeId,
+        workspaceId,
+        isActive: false
     })
 
-    
+    if (!response) {
+        return res.status(404).json({
+            success: false,
+            message: "Child QR code not found or something went wrong",
+        });
+    }
+
+    console.log("Child Qrcode deactivate started ...");
+    updateChildQrCodeActivationStatus({
+        workspaceId,
+        childQrcodeId,
+        isActive: false
+    })
+
+    return res.status(200).json({
+        success: true,
+        message: "Child QR code deactivated successfully",
+    });
+
 })
 export {
     createQRcodeLiketype,
@@ -734,5 +822,6 @@ export {
     scanChildQrcode,
     getMasterQrcodeDetails,
     deleteQrcodes,
-    getAllDataByProtfolioForFridgeApp
+    getAllDataByProtfolioForFridgeApp,
+    deactivateChildQRcode
 };

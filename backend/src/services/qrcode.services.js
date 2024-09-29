@@ -3,8 +3,8 @@ import { generateFileName } from '../utils/helper.js';
 import { updaloadQrcodeImage } from '../services/api.services.js';
 import { productUrl } from '../utils/constant.js';
 
-const linkTypeQrcode = async (data, qrcodeColor = '#000000') => {
-    const qrcodeLink = `${productUrl}/${data}`;
+const linkTypeQrcode = async (data, qrcodeColor = '#000000',productName) => {
+    const qrcodeLink = `${productUrl}/${productName}/${data}`;
 
     const qrCodeData = await QRCode.toBuffer(qrcodeLink, {
         errorCorrectionLevel: 'H',

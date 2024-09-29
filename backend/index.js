@@ -4,7 +4,7 @@ import cookieParser from 'cookie-parser';
 import routes from './src/routes/index.js';
 import { connectToDb } from './src/config/db.config.js';
 import config from './src/config/index.js';
-import { saveMongoDbWorker, updateDatacubeWorker, saveStatsWorker } from './src/config/workers.config.js';
+import { saveMongoDbWorker, updateDatacubeWorker, saveStatsWorker, updateChildQrCodeActivationStatusWorker } from './src/config/workers.config.js';
 
 const app = express();
 
@@ -22,8 +22,9 @@ app.get('/', (req, res) => {
     });
 });
 
-app.get('/:id', (req, res) => {
-    res.redirect('https://ll06-reports-analysis-dowell.github.io/qrcode-scanner/');
+app.get('/:productName/:id', (req, res) => {
+    const { productName } = req.params;
+    res.redirect(`https://ll06-reports-analysis-dowell.github.io/qrcode-scanner/?productName=${productName}`);
 });
 
 app.get('/health', (req, res) => {
@@ -67,6 +68,7 @@ connectToDb().then(() => {
     initializeWorker(saveMongoDbWorker, 'saveMongoDbWorker');
     initializeWorker(updateDatacubeWorker, 'updateDatacubeWorker');
     initializeWorker(saveStatsWorker, 'saveStatsWorker');
+    initializeWorker(updateChildQrCodeActivationStatusWorker, 'updateChildQrCodeActivationStatusWorker');
 
     app.listen(config.PORT, onListening);
 }).catch((error) => {

@@ -13,6 +13,7 @@ const linkqrcodeSchema = z.object({
     longitude: z.string().optional(),
     isActive: z.boolean().optional().default(true),
     location: z.string().optional(),
+    productName: z.enum(["qrcode","myfridge","kiosk","scale","others"]).default("others"),
     activateBy: z.enum(["location", "customId"]),
     fieldsData: z.array(z.union([
         z.literal('name'),
@@ -73,7 +74,8 @@ const saveAgreementSchema = z.object({
 
 const myFridgeProtfolioSchema = z.object({
     workspaceId: z.string(),
-    protfolio: z.string()
+    protfolio: z.string(),
+    dataType: z.enum(["all", "active", "deactive"]).default("active").optional()
 })
 
 const savePortfolioSchema = z.object({

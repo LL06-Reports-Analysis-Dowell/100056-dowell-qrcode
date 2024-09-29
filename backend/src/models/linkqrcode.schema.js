@@ -43,6 +43,16 @@ const linkQrcodeSchema = new mongoose.Schema({
         type: String,
         default: ''
     },
+    productName: {
+        type: String,
+        required: true,
+        enum: ['qrcode', 'myfridge', 'kiosk','scale','others'],
+        default: 'others'
+    },
+    isUsed:{
+        type: Boolean,
+        default: false
+    },
     isActive: {
         type: Boolean,
         default: false

@@ -37,7 +37,31 @@ const updateData = async (data, workspaceId) => {
                 isActive: data.isActive,
                 location: data.location,
                 fieldsData: data.fieldsData,
+                isUsed:data.isUsed,
              }
+        );
+
+        if (!response.success) {
+            console.log("all failed");
+            return false;
+        }
+        return true;
+    } catch (error) {
+        return false;
+    }
+};
+
+const upadateChildQrCodeStatus = async (data, workspaceId) => {
+    const datacube = new Datacubeservices("1b834e07-c68b-4bf6-96dd-ab7cdc62f07f");
+
+    try {
+        const response = await datacube.dataUpdate(
+            `${workspaceId}_qrcode_database`,
+            `${workspaceId}_child_qrcode_list_collection`,
+            { childQrcodeId: data.childQrcodeId },
+            {
+                isActive: data.isActive,
+            }
         );
 
         if (!response.success) {
@@ -51,5 +75,6 @@ const updateData = async (data, workspaceId) => {
 };
 export {
     insertData,
-    updateData
+    updateData,
+    upadateChildQrCodeStatus
 };

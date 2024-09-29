@@ -1,6 +1,6 @@
 import { Worker } from 'bullmq';
 import config from './index.js';
-import { insertData, updateData } from '../utils/database.helper.js';
+import { insertData, updateData,upadateChildQrCodeStatus } from '../utils/database.helper.js';
 import Datacubeservices from '../services/datacube.services.js';
 import LinkQrcode from "../models/linkqrcode.schema.js";
 
@@ -136,4 +136,35 @@ const saveStatsWorker = new Worker(
     }
 );
 
-export { saveMongoDbWorker, updateDatacubeWorker, saveStatsWorker };
+const updateChildQrCodeActivationStatusWorker = new Worker(
+    "update-child-qrcode-activation-status",
+    async (job) => {
+        const { workspaceId, ...data } = job.data;
+        const success = await upadateChildQrCodeStatus(data, workspaceId);
+        if (!success) {
+            return {
+                success: false,
+                message: `Failed to update data for workspaceId: ${workspaceId}`
+            };
+        }
+        return {
+            success: true,
+            message: "Data has been updated successfully in Datacube"
+        };
+    },
+    {
+        connection: {
+            host: config.redisHost,
+            port: config.redisPort,
+            password: config.redisPassword
+        },
+        timeout: 300000, 
+        attempts: 5, 
+        backoff: {
+            type: 'exponential',
+            delay: 10000
+        }
+    }
+);
+
+export { saveMongoDbWorker, updateDatacubeWorker, saveStatsWorker,updateChildQrCodeActivationStatusWorker };
