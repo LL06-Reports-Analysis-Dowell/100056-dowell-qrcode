@@ -64,15 +64,5 @@ const portfolioSchema = new mongoose.Schema({
     }
 }, { timestamps: true });
 
-// Hash password before saving
-portfolioSchema.pre("save", async function(next) {
-    if (!this.isModified("password")) return next();
-    this.password = await bcrypt.hash(this.password, 10);
-    next();
-});
-
-portfolioSchema.methods.comparePassword = async function(enteredPassword) {
-    return await bcrypt.compare(enteredPassword, this.password);
-};
 
 export default mongoose.model("Portfolio", portfolioSchema);

@@ -25,21 +25,15 @@ const portfolioLogin = asyncHandler(async (req, res) => {
 
     const portfolio = await Portfolio.findOne({ workspaceName, portfolioName }).select('+password');
 
-    console.log(portfolio);
-    
-
-
     if (portfolio) {
-        const isPasswordMatched = await portfolio.comparePassword(password);
-
-        if (!isPasswordMatched) {
+        
+        if (password !== portfolio.password) {
             return res.status(200).json({
                 success: true,
                 message: "Please provide the correct password" 
             });
         }
 
-        // Update login info
         const updateUserDetails = await Portfolio.findByIdAndUpdate(
             portfolio._id,
             {
@@ -145,8 +139,8 @@ const portfolioDetails = asyncHandler(async (req, res) => {
         });
     }
 
-    const portfolio = await Portfolio.findOne({ portfolioName });
-
+    const portfolio = await Portfolio.findOne({ portfolioName }).select('+password');
+    
     if (!portfolio) {
         return res.status(404).json({
             success: false,
