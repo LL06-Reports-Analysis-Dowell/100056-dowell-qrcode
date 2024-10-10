@@ -6,7 +6,7 @@ const createCollectionSchema = z.object({
 });
 
 const linkqrcodeSchema = z.object({
-    numberOfQrcode: z.number().min(1).max(100),
+    numberOfQrcode: z.number().min(1).max(300),
     qrcodeColor: z.string().optional().default("#000000"),
     createdBy: z.string(),
     latitude: z.string().optional(),
