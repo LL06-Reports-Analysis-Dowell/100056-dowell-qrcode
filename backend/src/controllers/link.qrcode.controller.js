@@ -819,6 +819,7 @@ const deactivateChildQRcode = asyncHandler(async (req, res) => {
     });
 
 })
+
 export {
     createQRcodeLiketype,
     getQrcodeWorkspaceWise,
