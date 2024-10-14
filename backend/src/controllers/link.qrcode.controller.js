@@ -728,7 +728,7 @@ const getAllDataByProtfolioForFridgeApp = asyncHandler(async (req, res) => {
                 }
             }
         };
-    } else if (dataType === "inactive") {
+    } else if (dataType === "deactive") {
         dataToBeQueried = {
             workspaceId: workspaceId,
             isActive: false,
