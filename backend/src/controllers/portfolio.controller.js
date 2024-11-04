@@ -140,6 +140,8 @@ const portfolioDetails = asyncHandler(async (req, res) => {
     }
 
     const portfolio = await Portfolio.findOne({ portfolioName }).select('+password');
+
+    console.log("here is the user",portfolio);
     
     if (!portfolio) {
         return res.status(404).json({
