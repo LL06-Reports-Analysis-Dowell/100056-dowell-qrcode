@@ -43,27 +43,64 @@ const getUserAPIKey = async (workspaceId) =>{
     };
 }
 
-const dowellLoginService = async (portfolioName,password,workspaceName) => {
-    const response = await axios.post("https://100093.pythonanywhere.com/api/portfoliologin", {
+// const dowellLoginService = async (portfolioName,password,workspaceName) => {
+//     const response = await axios.post("https://100093.pythonanywhere.com/api/portfoliologin", {
+//         portfolio: portfolioName,
+//         password: password,
+//         workspace_name: workspaceName,
+//         username: "false"
+//     });
+
+//     if (!response.data.userinfo.workspace_name == workspaceName) {
+//         return {
+//             success: false,
+//             message: 'Invalid portfolio or password' || response?.data?.message,
+//         }
+//     }
+
+//     return {
+//         success: true,
+//         message: 'Login successful',
+//         userinfo: response.data
+//     };
+// }
+
+const dowellLoginService = async (portfolioName, password, workspaceName) => {
+    const url = "https://100093.pythonanywhere.com/api/portfoliologin";
+    
+    let payload = {
         portfolio: portfolioName,
         password: password,
         workspace_name: workspaceName,
         username: "false"
-    });
+    };
 
-    if (!response.data.userinfo.workspace_name == workspaceName) {
+    try {
+        let response = await axios.post(url, payload);
+        let responseData = response.data;
+        let status = "CID";  
+
+        if (responseData.message && responseData.message.toLowerCase().includes("username or password wrong")) {
+            payload.username = "true";
+            response = await axios.post(url, payload);
+            responseData = response.data;
+            status = "UID";
+        }
+
+        return {
+            success: true,
+            status: status,
+            message: "Authentication result",
+            userinfo: responseData
+        };
+    } catch (error) {
         return {
             success: false,
-            message: 'Invalid portfolio or password' || response?.data?.message,
-        }
+            message: `Request failed: ${error.message}`
+        };
     }
+};
 
-    return {
-        success: true,
-        message: 'Login successful',
-        userinfo: response.data
-    };
-}
 export {
     updaloadQrcodeImage,
     getUserAPIKey,

@@ -23,9 +23,29 @@ const portfolioLogin = asyncHandler(async (req, res) => {
         });
     }
 
-    const portfolio = await Portfolio.findOne({ workspaceName, portfolioName }).select('+password');
+    const dowellLoginDetails = await dowellLoginService(portfolioName, password, workspaceName);
+    
+
+    if (!dowellLoginDetails.success) {
+        return res.status(401).json({
+            success: false,
+            message: dowellLogin.message
+        });
+    }
+
+    let resolvedPortfolioName;
+    if (dowellLoginDetails.status === "CID") {
+        resolvedPortfolioName = portfolioName;
+    } else if (dowellLoginDetails.status === "UID") {
+        resolvedPortfolioName = dowellLoginDetails.userinfo.portfolio_info.portfolio_name;
+    }
+
+    const portfolio = await Portfolio.findOne({ workspaceName, portfolioName:resolvedPortfolioName }).select('+password');
+    
 
     if (portfolio) {
+
+        console.log("it is here");
         
         if (password !== portfolio.password) {
             return res.status(200).json({
@@ -58,15 +78,8 @@ const portfolioLogin = asyncHandler(async (req, res) => {
     }
      
 
-    const dowellLoginDetails = await dowellLoginService(portfolioName, password, workspaceName);
-
-    if (!dowellLoginDetails.success) {
-        return res.status(401).json({
-            success: false,
-            message: dowellLogin.message
-        });
-    }
-
+    
+    console.log("it is here ....");
     const dowellLogin = dowellLoginDetails.userinfo
 
 
@@ -102,7 +115,7 @@ const portfolioLogin = asyncHandler(async (req, res) => {
 
     const portfolioDetails = await Portfolio.create({
         workspaceName: workspaceName,
-        portfolioName: portfolioName,
+        portfolioName: resolvedPortfolioName,
         email: "",
         portfolioId: dowellLogin.portfolio_info.username[0],
         workspaceId: dowellLogin.userinfo.owner_id,
