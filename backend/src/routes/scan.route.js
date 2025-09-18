@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { batchScans } from "../controllers/scanController.js";
+import { batchScans } from "../controllers/scan.controller.js";
 import { validateScans } from "../middleware/validateScans.js";
 
 const router = Router();

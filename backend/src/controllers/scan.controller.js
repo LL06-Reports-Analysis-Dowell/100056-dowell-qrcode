@@ -1,4 +1,4 @@
-import { sendToKafka } from "../services/kafkaService.js";
+import { sendToKafka } from "../services/kafka.services.js";
 
 export async function batchScans(req, res) {
     const { scans } = req.body;

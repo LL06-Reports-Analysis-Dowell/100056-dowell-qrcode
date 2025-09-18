@@ -5,8 +5,8 @@ import routes from './src/routes/index.js';
 import { connectToDb } from './src/config/db.config.js';
 import config from './src/config/index.js';
 import { saveMongoDbWorker, updateDatacubeWorker, saveStatsWorker, updateChildQrCodeActivationStatusWorker } from './src/config/workers.config.js';
-import { initKafka } from "./services/kafkaService.js";
-import { errorHandler } from "./middleware/errorHandler.js";
+import { initKafka } from "./src/services/kafka.services.js";
+import { errorHandler } from "./src/middleware/errorHandler.js";
 const app = express();
 
 app.use(express.json());
