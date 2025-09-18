@@ -5,20 +5,22 @@ import routes from './src/routes/index.js';
 import { connectToDb } from './src/config/db.config.js';
 import config from './src/config/index.js';
 import { saveMongoDbWorker, updateDatacubeWorker, saveStatsWorker, updateChildQrCodeActivationStatusWorker } from './src/config/workers.config.js';
-
+import { initKafka } from "./services/kafkaService.js";
+import { errorHandler } from "./middleware/errorHandler.js";
 const app = express();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 app.use(cookieParser());
-
+// Error handler
+app.use(errorHandler);
 app.use('/api/v1/', routes);
 
 app.get('/', (req, res) => {
-    return res.status(200).json({ 
+    return res.status(200).json({
         success: true,
-        message: 'Backend services are running fine' 
+        message: 'Backend services are running fine'
     });
 });
 
@@ -28,9 +30,9 @@ app.get('/:productName/:id', (req, res) => {
 });
 
 app.get('/health', (req, res) => {
-    return res.status(200).json({ 
+    return res.status(200).json({
         success: true,
-        message: 'API services are running fine' 
+        message: 'API services are running fine'
     });
 })
 
@@ -70,6 +72,9 @@ connectToDb().then(() => {
     initializeWorker(saveStatsWorker, 'saveStatsWorker');
     initializeWorker(updateChildQrCodeActivationStatusWorker, 'updateChildQrCodeActivationStatusWorker');
 
+    async () => {
+        await initKafka();
+    }
     app.listen(config.PORT, onListening);
 }).catch((error) => {
     console.error('Failed to connect to DB:', error);
