@@ -3,34 +3,41 @@ version: '3.9'
 services:
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
-    container_name: zookeeper
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
-    ports:
-      - "2181:2181"
+    networks:
+      - qr-net
+    restart: unless-stopped
 
   kafka:
     image: confluentinc/cp-kafka:7.5.0
-    container_name: kafka
     depends_on:
       - zookeeper
     ports:
       - "9092:9092"
-      - "9093:9093"
+      - "29092:29092"
     environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_LISTENERS: INTERNAL://kafka:29092,EXTERNAL://0.0.0.0:9092
-      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:29092,EXTERNAL://localhost:9092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_BROKER_ID: ${KAFKA_BROKER_ID}
+      KAFKA_ZOOKEEPER_CONNECT: ${KAFKA_ZOOKEEPER_CONNECT}
+      KAFKA_LISTENERS: ${KAFKA_LISTENERS}
+      KAFKA_ADVERTISED_LISTENERS: ${KAFKA_ADVERTISED_LISTENERS}
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: ${KAFKA_LISTENER_SECURITY_PROTOCOL_MAP}
+      KAFKA_INTER_BROKER_LISTENER_NAME: ${KAFKA_INTER_BROKER_LISTENER_NAME}
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: ${KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR}
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: ${KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR}
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: ${KAFKA_TRANSACTION_STATE_LOG_MIN_ISR}
+    networks:
+      - qr-net
+    restart: unless-stopped
+
   mongo:
     container_name: mongo_container
     image: 'mongo'
     volumes:
       - mongo-data:/data/db
+    ports:
+      - "27017:27017"
     networks:
       - qr-net
     environment:
@@ -66,7 +73,9 @@ services:
       - kafka
     environment:
       PORT: ${PORT}
-      MONGO_DB_URI: ${MONGO_DB_URI}
+      MONGO_DB_URI: ${MONGO_SCAN_URI}
+      KAFKA_TOPIC: ${KAFKA_TOPIC}
+      KAFKA_BROKER: ${KAFKA_BROKER}
       REFRESH_TOKEN_SECRET: ${REFRESH_TOKEN_SECRET}
       REFRESH_TOKEN_EXPIRY: ${REFRESH_TOKEN_EXPIRY}
       JWT_EXPIRY: ${JWT_EXPIRY}
@@ -76,6 +85,24 @@ services:
       REDIS_PASSWORD: ${REDIS_PASSWORD}
     networks:
       - qr-net
+
+  consumer:
+      build:
+        context: ./consumer
+        dockerfile: Dockerfile
+      environment:
+        NODE_ENV: ${NODE_ENV}
+        KAFKA_BROKER: ${KAFKA_BROKER}
+        KAFKA_TOPIC: ${KAFKA_TOPIC}
+        KAFKA_GROUP_ID: ${KAFKA_GROUP_ID}
+        MONGO_URI: ${MONGO_SCAN_URI}
+        MONGO_DB_NAME: ${MONGO_SCAN_DB}
+      depends_on:
+        - kafka
+        - mongo
+      networks:
+        - qr-net
+      restart: unless-stopped
 
   nginx:
     build:
@@ -95,6 +122,7 @@ services:
       - qr-net
     depends_on:
       - backend
+
 
 volumes:
   mongo-data:
