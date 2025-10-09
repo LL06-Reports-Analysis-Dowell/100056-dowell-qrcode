@@ -21,7 +21,8 @@ const run = async () => {
     console.log('Connected successfully to MongoDB');
     // The database name is part of the connection URI
     const db = mongoClient.db(dbName);
-    
+    const collection = db.collection(collectionName);
+    console.log(`Targeting collection: ${collection.namespace}`);
 
     // Connect and subscribe the Kafka consumer
     await consumer.connect();
@@ -34,17 +35,11 @@ const run = async () => {
     await consumer.run({
         eachMessage: async ({ topic, partition, message }) => {
             try {
-                const data = JSON.parse(message.value.toString());
-                console.log(`Received message from partition ${partition}:`, data);
-                if (data.dataType == 'exhibitor') {
-                    const collection = db.collection(exhibitorCollection);
-                    console.log(`Targeting collection: ${collection.namespace}`);
-                }else{
-                    const collection = db.collection(collectionName);
-                    console.log(`Targeting collection: ${collection.namespace}`);
-                }
+                const feedbackEvent = JSON.parse(message.value.toString());
+                console.log(`Received message from partition ${partition}:`, feedbackEvent);
+
                 const documentToInsert = {
-                    ...data,
+                    ...feedbackEvent,
                     processedAt: new Date(),
                     kafkaMetadata: {
                         topic,

@@ -3,61 +3,52 @@ import axios from 'axios';
 class Datacubeservices {
     constructor(apiKey) {
         this.apiKey = apiKey;
-        // this.baseUrl = 'https://datacube.uxlivinglab.online/db_api';
-        this.baseUrl = 'https://www.dowelldatacube.uxlivinglab.online/db_api';
+        this.baseUrl = 'https://datacube.uxlivinglab.online/api';
+        // this.baseUrl = 'https://www.dowelldatacube.uxlivinglab.online/db_api';
+        this.headers = {
+        Authorization: `Api-Key ${apiKey}`,
+        ContentType: "application/json"
+        }
     }
 
-    async dataInsertion(databaseName, collectionName, data) {
+    async dataInsertion(databaseId, collectionName, data) {
         const url = `${this.baseUrl}/crud/`;
+        
         const payload = {
-            api_key: this.apiKey,
-            db_name: databaseName,
-            coll_name: collectionName,
-            operation: 'insert',
-            data: data,
-            payment: false
+            database_id: databaseId,
+            collection_name: collectionName,
+            data: data
         };
         try {
-            const response = await axios.post(url, payload);
+            const response = await axios.post(url, payload,{headers: this.headers});
             return response.data;
         } catch (error) {
             throw error;
         }
     }
 
-    async dataRetrieval(databaseName, collectionName, filters, limit, offset) {
-        const url = `${this.baseUrl}/get_data/`;
+    async dataRetrieval(databaseId, collectionName, filters) {
+        const url = `${this.baseUrl}/crud/?database_id=${databaseId}&collection_name=${collectionName}&filters=${filters}`;
+        
+        try {
+            const response = await axios.get(url,{headers: this.headers});
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async dataUpdate(databaseId, collectionName, filters, updateData) {
+        const url = `${this.baseUrl}/crud/`;
+        
         const payload = {
-            api_key: this.apiKey,
-            db_name: databaseName,
-            coll_name: collectionName,
-            operation: 'fetch',
+            database_id: databaseId,
+            collection_name: collectionName,
             filters: filters,
-            limit: limit,
-            offset: offset,
-            payment: false
+            update_data: updateData
         };
         try {
-            const response = await axios.post(url, payload);
-            return response.data;
-        } catch (error) {
-            throw error;
-        }
-    }
-
-    async dataUpdate(databaseName, collectionName, query, updateData) {
-        const url = `${this.baseUrl}/crud/`;
-        const payload = {
-            api_key: this.apiKey,
-            db_name: databaseName,
-            coll_name: collectionName,
-            operation: 'update',
-            query: query,
-            update_data: updateData,
-            payment: false
-        };
-        try {
-            const response = await axios.put(url, payload);
+            const response = await axios.put(url, payload, {headers: this.headers});
             return {
                 success: true,
                 message: "Data updated successfully",
@@ -72,16 +63,20 @@ class Datacubeservices {
         }
     }
 
-    async createCollection(databaseName, collectionName) {
+    async createCollection(databaseId, collections) {
         const url = `${this.baseUrl}/add_collection/`;
+    //     {
+            // "collections": [{
+            //     "name":"LatIndex",
+            // "fields":[ {"name":"latitude","type":"number"}, {"name":"longitude","type":"number"}]
+        // }]
+    //   }
         const payload = {
-            api_key: this.apiKey,
-            db_name: databaseName,
-            coll_names: collectionName,
-            num_collections: 1
+            database_id: databaseId,
+            collections: collections
         };
         try {
-            const response = await axios.post(url, payload);
+            const response = await axios.post(url, payload, {headers: this.headers});
             return response.data;
         } catch (error) {
             return {
