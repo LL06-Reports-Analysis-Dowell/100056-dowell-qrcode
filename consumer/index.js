@@ -1,16 +1,19 @@
 import { MongoClient } from 'mongodb';
 import kafka from './kafka-client.js';
 import 'dotenv/config';
+import Datacubeservices from './datacube.services.js';
 // Environment variables from Docker Compose
 const mongoUri = process.env.MONGO_URI;
 const topic = process.env.KAFKA_TOPIC;
 const groupId = process.env.KAFKA_GROUP_ID;
 const dbName = process.env.MONGO_DB_NAME || "qr_scans";
-const collectionName = process.env.MONGO_COLLECTION || 'exhibitor1'; // The collection to store feedback
+// const collectionName = process.env.MONGO_COLLECTION || 'exhibitor1'; // The collection to store feedback
 const exhibitorCollection = process.env.MONGO_EXHIBITOR_COLL || 'exhibitors';
 
 const mongoClient = new MongoClient(mongoUri);
 const consumer = kafka.consumer({ groupId: groupId });
+
+const datacube = new Datacubeservices(process.env.DATACUBE_API_KEY);
 
 /**
  * Main function to run the consumer worker.
@@ -27,7 +30,7 @@ const run = async () => {
     await consumer.connect();
     console.log('Kafka Consumer connected.');
     console.log("KAFKA_TOPIC;", process.env.KAFKA_TOPIC);
-    await consumer.subscribe({ topic: topic, fromBeginning: true });
+    await consumer.subscribe({ topic: topic, fromBeginning: false });
     console.log(`Subscribed to Kafka topic: ${topic} with group ID: ${groupId}`);
 
     // Start consuming messages
@@ -39,9 +42,31 @@ const run = async () => {
                 if (data.dataType == 'exhibitor') {
                     const collection = db.collection(exhibitorCollection);
                     console.log(`Targeting collection: ${collection.namespace}`);
+                    
+                    const collections =[{
+                                name: data.name+"_"+data.id,
+                                fields: [ {"name":"data","type":"string"}]
+                        }]
+                    const response  = await datacube.createCollection(process.env.DATABASE_ID,collections)
+                    if (response.success) {
+                        data.datacube_success = true; 
+                        console.log('Collection created successfully in datacube:', response.message);
+                    } else {
+                        data.datacube_success = false;
+                        console.error('Error creating collection:', response.error);
+                    }
                 }else{
+                    const collectionName = data.name+"_"+data.id
                     const collection = db.collection(collectionName);
                     console.log(`Targeting collection: ${collection.namespace}`);
+                    const response = await datacube.dataInsertion(process.env.DATABASE_ID, collectionName, data.data);
+                    if (response.success) {
+                        data.datacube_success = true; 
+                        console.log('Scan inserted successfully in datacube:', response.message);
+                    } else {
+                        data.datacube_success = false;
+                        console.error('Error inserting scan:', response.error);
+                    }
                 }
                 const documentToInsert = {
                     ...data,
@@ -54,7 +79,7 @@ const run = async () => {
                 };
 
                 const result = await collection.insertOne(documentToInsert);
-                console.log(`Successfully inserted feedback with _id: ${result.insertedId}`);
+                console.log(`Successfully inserted data with _id: ${result.insertedId} in collection: ${collection.namespace}`);
             } catch (err) {
                 console.error('Error processing message or inserting into MongoDB:', err);
             }

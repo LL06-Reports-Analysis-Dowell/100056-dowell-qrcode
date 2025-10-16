@@ -1,12 +1,5 @@
 import mongoose from "mongoose";
-
-const mongoUri = process.env.MONGO_DB_URI+"/"+process.env.MONGO_DB_NAME;
-
-mongoose.connect(mongoUri, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-}).then(() => console.log("✅ MongoDB connected"))
-  .catch((err) => console.error("❌ Mongo error:", err));
+import { connectToDb } from "../config/db.config.js";
 
 const exhibitorSchema = new mongoose.Schema({
     id: {
@@ -19,6 +12,10 @@ const exhibitorSchema = new mongoose.Schema({
         required: true
     },
     description: {
+        type: String,
+        required: true
+    },
+    url: {
         type: String,
         required: true
     },
@@ -48,4 +45,6 @@ const exhibitorSchema = new mongoose.Schema({
     }
 });
 
-export default mongoose.model('ExhibitorSchema', exhibitorSchema);
+const scannerDb = await connectToDb("scanner");
+
+export default scannerDb.model('ExhibitorSchema', exhibitorSchema);

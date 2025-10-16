@@ -73,10 +73,12 @@ services:
       - kafka
     environment:
       PORT: ${PORT}
-      MONGO_DB_URI: ${MONGO_SCAN_URI}
+      MONGO_DB_URI: ${MONGO_DB_URI}
+      MONGO_SCAN_URI: ${MONGO_SCAN_URI}
       MONGO_DB_NAME: ${MONGO_SCAN_DB}
       MONGO_EXHIBITOR_COLL: ${MONGO_EXHIBITOR_COLL}
       DATABASE_ID: ${DATABASE_ID}
+      DATACUBE_API_KEY: ${DATACUBE_API_KEY}
       KAFKA_TOPIC: ${KAFKA_TOPIC}
       KAFKA_BROKER: ${KAFKA_BROKER}
       REFRESH_TOKEN_SECRET: ${REFRESH_TOKEN_SECRET}
@@ -100,6 +102,8 @@ services:
         KAFKA_GROUP_ID: ${KAFKA_GROUP_ID}
         MONGO_URI: ${MONGO_SCAN_URI}
         MONGO_DB_NAME: ${MONGO_SCAN_DB}
+        DATACUBE_API_KEY: ${DATACUBE_API_KEY}
+        DATABASE_ID: ${DATABASE_ID}
       depends_on:
         - kafka
         - mongo
