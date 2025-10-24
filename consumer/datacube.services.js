@@ -17,13 +17,18 @@ class Datacubeservices {
         const payload = {
             database_id: databaseId,
             collection_name: collectionName,
-            data: data
+            data: [data]
         };
         try {
             const response = await axios.post(url, payload,{headers: this.headers});
             return response.data;
         } catch (error) {
-            throw error;
+            console.log(error);
+            return {
+                success: false,
+                message: "Error inserting data",
+                error: error.message
+            };
         }
     }
 
@@ -34,7 +39,12 @@ class Datacubeservices {
             const response = await axios.get(url,{headers: this.headers});
             return response.data;
         } catch (error) {
-            throw error;
+            console.log(error);
+            return {
+                success: false,
+                message: "Error retrieving data",
+                error: error.message
+            };
         }
     }
 
@@ -129,7 +139,6 @@ class Datacubeservices {
             return response.data;
         } catch (error) {
             console.error('Error in dataDelete:', error);
-            throw error;
         }
     }
 }

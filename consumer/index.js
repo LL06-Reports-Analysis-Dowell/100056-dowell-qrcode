@@ -8,6 +8,7 @@ const topic = process.env.KAFKA_TOPIC;
 const groupId = process.env.KAFKA_GROUP_ID;
 const dbName = process.env.MONGO_DB_NAME || "qr_scans";
 // const collectionName = process.env.MONGO_COLLECTION || 'exhibitor1'; // The collection to store feedback
+let collection;
 const exhibitorCollection = process.env.MONGO_EXHIBITOR_COLL || 'exhibitors';
 
 const mongoClient = new MongoClient(mongoUri);
@@ -40,15 +41,22 @@ const run = async () => {
                 const data = JSON.parse(message.value.toString());
                 console.log(`Received message from partition ${partition}:`, data);
                 if (data.dataType == 'exhibitor') {
-                    const collection = db.collection(exhibitorCollection);
+                    collection = db.collection(exhibitorCollection);
                     console.log(`Targeting collection: ${collection.namespace}`);
+                    console.log(`DataType = exhibitor,keys present in the data: ${Object.keys(data)}`);
                     
                     const collections =[{
                                 name: data.name+"_"+data.id,
-                                fields: [ {"name":"data","type":"string"}]
+                                fields: [ 
+                                    {"name":"data","type":"string"},
+                                    {"name":"timestamp","type":"string"}
+                                ]
                         }]
                     const response  = await datacube.createCollection(process.env.DATABASE_ID,collections)
                     if (response.success) {
+                        delete data.dataType;
+                        const res = await datacube.dataInsertion(process.env.DATABASE_ID, exhibitorCollection, data);
+                        console.log("This is the exhibitor insertion response",res);
                         data.datacube_success = true; 
                         console.log('Collection created successfully in datacube:', response.message);
                     } else {
@@ -56,17 +64,25 @@ const run = async () => {
                         console.error('Error creating collection:', response.error);
                     }
                 }else{
-                    const collectionName = data.name+"_"+data.id
-                    const collection = db.collection(collectionName);
+                    const collectionName = data[0].name+"_"+data[0].id
+                    collection = db.collection(collectionName);
                     console.log(`Targeting collection: ${collection.namespace}`);
-                    const response = await datacube.dataInsertion(process.env.DATABASE_ID, collectionName, data.data);
-                    if (response.success) {
-                        data.datacube_success = true; 
-                        console.log('Scan inserted successfully in datacube:', response.message);
-                    } else {
-                        data.datacube_success = false;
-                        console.error('Error inserting scan:', response.error);
+                    console.log(`DataType = scanner,keys present in the data: ${Object.keys(data)}`);
+                    for (let i = 0; i < data.length; i++) {
+                        console.log(data[i]);
+                        delete data[i].name;
+                        delete data[i].id;
+                        data[i].timestamp = new Date().toISOString();
+                        const response = await datacube.dataInsertion(process.env.DATABASE_ID, collectionName, data[i]);
+                        if (response.success) {
+                            data[i].datacube_success = true; 
+                            console.log('Scan inserted successfully in datacube:', response.message);
+                        } else {
+                            data[i].datacube_success = false;
+                            console.error('Error inserting scan:', response.error);
+                        }
                     }
+                    
                 }
                 const documentToInsert = {
                     ...data,
