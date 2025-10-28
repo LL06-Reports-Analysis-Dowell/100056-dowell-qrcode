@@ -2,16 +2,29 @@ import mongoose from "mongoose";
 import { connectToDb } from "../config/db.config.js";
 
 const exhibitorSchema = new mongoose.Schema({
-    id: {
+    exhibitorId: {
         type: String,
         required: true,
+        unique: true
+    },
+    exhibitionId: {
+        type: String,
+        required: false,
         unique: true
     },
     name: {
         type: String,
         required: true
     },
-    description: {
+    company: {
+        type: String,
+        required: true
+    },
+    email: {
+        type: String,
+        required: true
+    },
+    phoneNumber: {
         type: String,
         required: true
     },
@@ -26,10 +39,6 @@ const exhibitorSchema = new mongoose.Schema({
     endDate: {
         type: String,
         required: true
-    },
-    location: {
-        type: String,
-        default: ''
     },
     createdAt: {
         type: String,

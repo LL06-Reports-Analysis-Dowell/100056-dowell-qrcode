@@ -111,7 +111,21 @@ services:
       networks:
         - qr-net
       restart: unless-stopped
-
+  frontend:
+    container_name: frontend_container
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - '8080:8080'
+    restart: always
+    volumes:
+      - ./frontend:/usr/src/app
+      - /usr/src/app/node_modules
+    depends_on:
+      - backend
+    networks:
+      - qr-net
   nginx:
     build:
       context: ./nginx

@@ -2,6 +2,7 @@ import { MongoClient } from 'mongodb';
 import kafka from './kafka-client.js';
 import 'dotenv/config';
 import Datacubeservices from './datacube.services.js';
+import { v4 as uuidv4 } from 'uuid';
 // Environment variables from Docker Compose
 const mongoUri = process.env.MONGO_URI;
 const topic = process.env.KAFKA_TOPIC;
@@ -41,12 +42,13 @@ const run = async () => {
                 const data = JSON.parse(message.value.toString());
                 console.log(`Received message from partition ${partition}:`, data);
                 if (data.dataType == 'exhibitor') {
+                    data.exhibitorId = uuidv4();
                     collection = db.collection(exhibitorCollection);
                     console.log(`Targeting collection: ${collection.namespace}`);
                     console.log(`DataType = exhibitor,keys present in the data: ${Object.keys(data)}`);
                     
                     const collections =[{
-                                name: data.name+"_"+data.id,
+                                name: data.name+"_"+data.exhibitorId,
                                 fields: [ 
                                     {"name":"data","type":"string"},
                                     {"name":"timestamp","type":"string"}

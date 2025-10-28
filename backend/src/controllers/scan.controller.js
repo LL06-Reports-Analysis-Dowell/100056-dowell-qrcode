@@ -57,7 +57,8 @@ export async function getExhibitors(req, res) {
     const collectionName = process.env.MONGO_EXHIBITOR_COLL;
 
     try {
-        const fil = JSON.stringify({});
+        const fil = req.query.filters;
+        console.log(`Filters: ${fil}`);
         const results = await datacube.dataRetrieval(databaseId, collectionName, fil)
         if (results.success){
             res.status(200).json({ success: true, data: results.data, message: "Datacube data" });
@@ -71,3 +72,4 @@ export async function getExhibitors(req, res) {
         res.status(500).json({ error: "Failed to get exhibitors" });
     }
 }
+
