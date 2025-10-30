@@ -10,7 +10,10 @@ const groupId = process.env.KAFKA_GROUP_ID;
 const dbName = process.env.MONGO_DB_NAME || "qr_scans";
 // const collectionName = process.env.MONGO_COLLECTION || 'exhibitor1'; // The collection to store feedback
 let collection;
+let tokenCollection = false;
+let tokenData = false;
 const exhibitorCollection = process.env.MONGO_EXHIBITOR_COLL || 'exhibitors';
+const tokenCollectionName = process.env.MONGO_TOKEN_COLL || 'coll_tokens';
 
 const mongoClient = new MongoClient(mongoUri);
 const consumer = kafka.consumer({ groupId: groupId });
@@ -42,8 +45,11 @@ const run = async () => {
                 const data = JSON.parse(message.value.toString());
                 console.log(`Received message from partition ${partition}:`, data);
                 if (data.dataType == 'exhibitor') {
-                    data.exhibitorId = uuidv4();
+                    // data.exhibitorId = uuidv4();
                     collection = db.collection(exhibitorCollection);
+                    tokenCollection = db.collection(tokenCollectionName);
+                    tokenData = data.tokenDetails
+                    delete data.tokenDetails;
                     console.log(`Targeting collection: ${collection.namespace}`);
                     console.log(`DataType = exhibitor,keys present in the data: ${Object.keys(data)}`);
                     
@@ -58,6 +64,7 @@ const run = async () => {
                     if (response.success) {
                         delete data.dataType;
                         const res = await datacube.dataInsertion(process.env.DATABASE_ID, exhibitorCollection, data);
+                        const tokenRes = await datacube.dataInsertion(process.env.DATABASE_ID, tokenCollection, tokenData);
                         console.log("This is the exhibitor insertion response",res);
                         data.datacube_success = true; 
                         console.log('Collection created successfully in datacube:', response.message);
@@ -98,6 +105,19 @@ const run = async () => {
 
                 const result = await collection.insertOne(documentToInsert);
                 console.log(`Successfully inserted data with _id: ${result.insertedId} in collection: ${collection.namespace}`);
+                if (tokenCollection && tokenData) {
+                    const tokenDocumentToInsert = {
+                        ...tokenData,
+                        processedAt: new Date(),
+                        kafkaMetadata: {
+                            topic,
+                            partition,
+                            offset: message.offset.toString(), // Store offset as string for compatibility
+                        }
+                    };
+                    const tokenResult = await tokenCollection.insertOne(tokenDocumentToInsert);
+                    console.log(`Successfully inserted token data with _id: ${tokenResult.insertedId} in collection: ${tokenCollection.namespace}`);
+                }
             } catch (err) {
                 console.error('Error processing message or inserting into MongoDB:', err);
             }

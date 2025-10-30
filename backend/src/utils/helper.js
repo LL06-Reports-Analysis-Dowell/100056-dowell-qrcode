@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 import { checkDistanceForQrcodeURL } from './constant.js';
+import jwt from "jsonwebtoken";
 
 
 function generateFileName() {
@@ -70,9 +71,40 @@ const checkQrcodeDistance = async (radius,referencePoint,locations) => {
         response: response.data.results,
     }
 }
+
+const createJWTToken = (collectionName, endDateStr) => {
+    const endDate = new Date(endDateStr);
+    console.log(`End date str: ${endDateStr}, type: ${typeof endDate}, end date:`, endDate);
+    const timeSpan = Math.floor((endDate - Date.now()) / 1000);
+    console.log(`Expiry time for JWT: ${timeSpan} seconds`);
+    const payload = {
+    collectionName: collectionName
+    };
+
+    const secretKey = process.env.JWT_SECRET
+
+    const token = jwt.sign(payload, secretKey, {
+    algorithm: "HS256",
+    expiresIn: `${timeSpan}s`
+    });
+
+    return token;
+}
+
+const JWTDecode = (token) => {
+    try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    console.log("✅ Original payload:", decoded);
+    return decoded;
+    } catch (error) {
+    console.error("❌ Invalid or expired token:", error.message);
+    }
+}
 export {
     generateFileName,
     createUUID,
     calculateDateRange,
-    checkQrcodeDistance
+    checkQrcodeDistance,
+    createJWTToken,
+    JWTDecode
 };

@@ -25,7 +25,8 @@ export const CreateExhibitorDialog = ({ open, onOpenChange, onSuccess }: CreateE
     phoneNumber: '',
     startDate: '',
     endDate: '',
-    isActive: true
+    isActive: true,
+    domainName: window.location.origin
   });
   
   const [loading, setLoading] = useState(false);
@@ -61,7 +62,8 @@ export const CreateExhibitorDialog = ({ open, onOpenChange, onSuccess }: CreateE
         phoneNumber: '',
         startDate: '',
         endDate: '',
-        isActive: true
+        isActive: true,
+        domainName: window.location.origin
       });
       onOpenChange(false);
       if (onSuccess) {
