@@ -6,7 +6,7 @@ export function validateScans(req, res, next) {
     }
 
     for (const scan of scans) {
-        if (!scan.id || !scan.data) {
+        if (!scan.tokenId || !scan.data) {
             return res.status(400).json({ error: "invalid scan format" });
         }
     }

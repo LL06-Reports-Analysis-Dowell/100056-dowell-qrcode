@@ -3,6 +3,9 @@ import kafka from './kafka-client.js';
 import 'dotenv/config';
 import Datacubeservices from './datacube.services.js';
 import { v4 as uuidv4 } from 'uuid';
+import { connectToMongo } from './db.js';
+import { getTokenInfo } from './tokenCache.js';
+
 // Environment variables from Docker Compose
 const mongoUri = process.env.MONGO_URI;
 const topic = process.env.KAFKA_TOPIC;
@@ -15,7 +18,8 @@ let tokenData = false;
 const exhibitorCollection = process.env.MONGO_EXHIBITOR_COLL || 'exhibitors';
 const tokenCollectionName = process.env.MONGO_TOKEN_COLL || 'coll_tokens';
 
-const mongoClient = new MongoClient(mongoUri);
+// const mongoClient = new MongoClient(mongoUri);
+const db = await connectToMongo(dbName);
 const consumer = kafka.consumer({ groupId: groupId });
 
 const datacube = new Datacubeservices(process.env.DATACUBE_API_KEY);
@@ -25,10 +29,10 @@ const datacube = new Datacubeservices(process.env.DATACUBE_API_KEY);
  */
 const run = async () => {
     // Connect to MongoDB
-    await mongoClient.connect();
+    // await mongoClient.connect();
     console.log('Connected successfully to MongoDB');
     // The database name is part of the connection URI
-    const db = mongoClient.db(dbName);
+    // const db = mongoClient.db(dbName);
     
 
     // Connect and subscribe the Kafka consumer
@@ -64,7 +68,7 @@ const run = async () => {
                     if (response.success) {
                         delete data.dataType;
                         const res = await datacube.dataInsertion(process.env.DATABASE_ID, exhibitorCollection, data);
-                        const tokenRes = await datacube.dataInsertion(process.env.DATABASE_ID, tokenCollection, tokenData);
+                        const tokenRes = await datacube.dataInsertion(process.env.DATABASE_ID, tokenCollectionName, tokenData);
                         console.log("This is the exhibitor insertion response",res);
                         data.datacube_success = true; 
                         console.log('Collection created successfully in datacube:', response.message);
@@ -73,14 +77,16 @@ const run = async () => {
                         console.error('Error creating collection:', response.error);
                     }
                 }else{
-                    const collectionName = data[0].name+"_"+data[0].id
+                    const tokenId = data[0].tokenId
+                    const tokenInfo = await getTokenInfo(tokenId)
+                    console.log(`Token info: ${tokenInfo}`);
+                    const collectionName = tokenInfo.collectionName
                     collection = db.collection(collectionName);
                     console.log(`Targeting collection: ${collection.namespace}`);
                     console.log(`DataType = scanner,keys present in the data: ${Object.keys(data)}`);
                     for (let i = 0; i < data.length; i++) {
                         console.log(data[i]);
-                        delete data[i].name;
-                        delete data[i].id;
+                        delete data[i].tokenId
                         data[i].timestamp = new Date().toISOString();
                         const response = await datacube.dataInsertion(process.env.DATABASE_ID, collectionName, data[i]);
                         if (response.success) {
