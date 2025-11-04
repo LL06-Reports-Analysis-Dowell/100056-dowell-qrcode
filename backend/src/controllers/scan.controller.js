@@ -2,7 +2,8 @@ import kafka  from "../services/updateKafka.services.js";
 import { v4 as uuidv4 } from "uuid";
 import Datacubeservices from '../services/datacube.services.js';
 import ExhibitorSchema from "../models/exhibitor.schema.js";
-import { createJWTToken } from "../utils/helper.js";
+import TokenSchema from "../models/token.schema.js";
+import { createJWTToken, JWTDecode } from "../utils/helper.js";
 
 const datacube = new Datacubeservices(process.env.DATACUBE_API_KEY);
 async function sendtoKafka(data) {
@@ -42,8 +43,8 @@ export async function createExhibitor(req, res) {
     delete req.body.domainName;
     const tokenId = uuidv4();
     const exhibitorId = uuidv4();
-    const token = createJWTToken(req.body.name+"_"+exhibitorId, req.body.endDate);
-    const url = `${domainName}/scan-link-pro/scanner/${tokenId}`
+    const token = createJWTToken(req.body.name+"_"+exhibitorId, req.body.name, exhibitorId, req.body.endDate);
+    const url = `${domainName}/scan-link-pro/?token=${tokenId}`
 
     let exhibitor = { ...req.body, 
         dataType: "exhibitor",
@@ -88,3 +89,23 @@ export async function getExhibitors(req, res) {
     }
 }
 
+export async function validateToken(req, res) {
+    const tokenId = req.body.tokenId;
+    
+    try {
+        const exists = await TokenSchema.exists({ tokenId: tokenId });
+        if (exists){
+            const tokenData = await TokenSchema.findOne({ tokenId: tokenId });
+            const decoded = JWTDecode(tokenData.token);
+            const exhibitorData = await ExhibitorSchema.findOne({ exhibitorId: decoded.exhibitorId });
+            console.log(`This is the exhibitor data: ${exhibitorData}`);
+
+            res.status(200).json({ success: true, isValid: true, isActive: exhibitorData.isActive, message: "Token exists in MongoDB" });  
+        }else {
+            res.status(200).json({ success: true, isValid: false, isActive: false, message: "Token does not exist in MongoDB" });
+        }
+    }catch (err) {
+        console.error("❌ Failed to validate token", err);
+        res.status(500).json({ error: "Failed to validate token" });
+    }
+}

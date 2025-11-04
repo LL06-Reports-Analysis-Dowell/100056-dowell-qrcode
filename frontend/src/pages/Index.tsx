@@ -1,8 +1,13 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { QrCode } from 'lucide-react';
+// import { useParams, useSearchParams, useLocation, urlSearchParams } from 'react-router-dom';
 
 const Index = () => {
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get('token');
+  console.log(`Token Params from Index.tsx: ${token}`);
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4 py-8">
       <div className="w-full max-w-md text-center space-y-6">
@@ -42,7 +47,7 @@ const Index = () => {
 
         {/* Start Scanning Button */}
         <Button asChild size="lg" className="w-full">
-          <Link to="/scanner/demo-exhibitor">
+          <Link to={`/scanner/?token=${token}`}>
             Start Scanning
           </Link>
         </Button>

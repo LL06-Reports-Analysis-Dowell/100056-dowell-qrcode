@@ -7,11 +7,6 @@ const exhibitorSchema = new mongoose.Schema({
         required: true,
         unique: true
     },
-    exhibitionId: {
-        type: String,
-        required: false,
-        unique: true
-    },
     name: {
         type: String,
         required: true
@@ -40,20 +35,12 @@ const exhibitorSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    createdAt: {
-        type: String,
-        default: ''
-    },
-    updatedAt: {
-        type: String,
-        required: true
-    },
-    status:{
-        type: String,
+    isActive:{
+        type: Boolean,
         default: false
     }
 });
 
 const scannerDb = await connectToDb("scanner");
 
-export default scannerDb.model('ExhibitorSchema', exhibitorSchema);
+export default scannerDb.model('Exhibitors', exhibitorSchema);

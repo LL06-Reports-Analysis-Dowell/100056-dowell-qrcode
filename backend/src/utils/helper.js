@@ -72,13 +72,15 @@ const checkQrcodeDistance = async (radius,referencePoint,locations) => {
     }
 }
 
-const createJWTToken = (collectionName, endDateStr) => {
+const createJWTToken = (collectionName, name, exhibitorId, endDateStr) => {
     const endDate = new Date(endDateStr);
     console.log(`End date str: ${endDateStr}, type: ${typeof endDate}, end date:`, endDate);
     const timeSpan = Math.floor((endDate - Date.now()) / 1000);
     console.log(`Expiry time for JWT: ${timeSpan} seconds`);
     const payload = {
-    collectionName: collectionName
+    collectionName: collectionName,
+    name: name,
+    exhibitorId: exhibitorId
     };
 
     const secretKey = process.env.JWT_SECRET
@@ -91,10 +93,21 @@ const createJWTToken = (collectionName, endDateStr) => {
     return token;
 }
 
+const JWTDecode = (token) => {
+    try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    console.log("✅ Original payload:", decoded);
+    return decoded;
+    } catch (error) {
+    console.error("❌ Invalid or expired token:", error.message);
+    }
+}
+
 export {
     generateFileName,
     createUUID,
     calculateDateRange,
     checkQrcodeDistance,
-    createJWTToken
+    createJWTToken,
+    JWTDecode
 };

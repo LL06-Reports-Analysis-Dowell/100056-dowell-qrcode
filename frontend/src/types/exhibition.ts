@@ -57,3 +57,8 @@ export interface ScanResult {
   error?: string;
   timestamp: string;
 }
+
+export interface ValidationResult {
+  isValid: boolean;
+  isActive: boolean;
+}

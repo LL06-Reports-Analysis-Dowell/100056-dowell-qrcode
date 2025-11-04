@@ -1,4 +1,4 @@
-import { Exhibition, Exhibitor, ScanRecord, QRCodeData } from '@/types/exhibition';
+import { Exhibition, Exhibitor, ScanRecord, QRCodeData, ValidationResult } from '@/types/exhibition';
 
 // Mock API base URL - in production this would be your backend API
 const API_BASE_URL = '/api';
@@ -124,6 +124,41 @@ export const exhibitorAPI = {
   getByToken: async (token: string): Promise<Exhibitor | null> => {
     await new Promise(resolve => setTimeout(resolve, 200));
     return exhibitors.find(exhibitor => exhibitor.name === token) || null;
+  },
+
+  validateToken: async (token: string): Promise<ValidationResult> => {
+    const endpoint = `${BACKEND_URL}/api/v1/scans/validate-token`; // Adjust the endpoint path if necessary
+
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          // Include authorization headers (e.g., JWT token) here if required by your backend
+          // 'Authorization': `Bearer ${localStorage.getItem('token')}`, 
+        },
+        body: JSON.stringify({ tokenId: token}),
+      });
+
+      if (!response.ok) {
+        // Attempt to parse error message from response body
+        const errorDetail = await response.text();
+        throw new Error(`Failed to verify token. Status: ${response.status}. Detail: ${errorDetail}`);
+      }
+
+      // The backend should return the fully created Exhibitor object
+      // const newExhibitor: Exhibitor = await response.json();
+      const res = await response.json();
+      
+      return { 
+        isValid: res.isValid,
+        isActive: res.isActive
+      };
+
+    } catch (error) {
+      console.error("API Call Error in exhibitorAPI.validateToken:", error);
+      throw error; // Re-throw the error to be handled by the calling component (CreateExhibitorDialog)
+    }
   },
 
 //  create: async (data: Omit<Exhibitor, 'id' | 'secureToken' | 'scannerUrl' | 'createdAt' | 'updatedAt' | 'startDate' | 'endDate'>): Promise<Exhibitor> => {

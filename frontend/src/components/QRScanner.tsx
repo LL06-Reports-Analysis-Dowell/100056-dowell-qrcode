@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
+// import { useParams, useSearchParams, useLocation } from 'react-router-dom';
 import { Camera, CheckCircle, XCircle, User, Building, Mail, Phone, Scan, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,9 +10,9 @@ import { Exhibitor, ScanResult, QRCodeData } from '@/types/exhibition';
 import { api } from '@/lib/api';
 
 export const QRScanner = () => {
-  const { exhibitorId } = useParams<{ exhibitorId: string }>();
-  const [searchParams] = useSearchParams();
-  const token = searchParams.get('token');
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get('token');
+  console.log(`Token Params: ${token}`);
 
   const [exhibitor, setExhibitor] = useState<Exhibitor | null>(null);
   const [loading, setLoading] = useState(true);
@@ -30,7 +30,7 @@ export const QRScanner = () => {
 
   useEffect(() => {
     validateExhibitor();
-  }, [exhibitorId, token]);
+  }, [token]);
 
   // Auto-start scanning when exhibitor is validated
   useEffect(() => {
@@ -40,7 +40,7 @@ export const QRScanner = () => {
   }, [exhibitor]);
 
   const validateExhibitor = async () => {
-    if (!exhibitorId || !token) {
+    if (!token) {
       setError('Invalid scanner URL');
       setLoading(false);
       return;
@@ -61,20 +61,20 @@ export const QRScanner = () => {
         createdAt: "test",
         updatedAt: "test"
       }
-      // const exhibitorData = await api.exhibitors.getByToken(token);
-      console.log(exhibitorData);
+      const validationResults = await api.exhibitors.validateToken(token);
+      console.log(`Token Validity: ${validationResults.isValid} & Exhibitor Activity: ${validationResults.isActive}`);
 
-      if (!exhibitorData || exhibitorData.id !== exhibitorId) {
-        setError('Invalid or expired scanner link');
+      if (!validationResults.isValid) {
+        setError('Invalid or expired user token');
         return;
       }
 
-      if (!exhibitorData.isActive) {
+      if (!validationResults.isActive) {
         setError('This scanner has been deactivated');
         return;
       }
 
-      setExhibitor(exhibitorData);
+      // setExhibitor(exhibitorData);
       setError(null);
     } catch (err) {
       setError('Failed to validate scanner access');
