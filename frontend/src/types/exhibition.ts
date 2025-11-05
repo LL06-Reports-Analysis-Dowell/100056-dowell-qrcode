@@ -31,15 +31,16 @@ export interface Customer {
 }
 
 export interface ScanRecord {
-  id: string;
-  exhibitorId: string;
-  exhibitionId: string;
-  customer: Customer;
-  timestamp: string;
+  tokenId: string;
+  data: string;
   location?: {
     latitude: number;
     longitude: number;
   };
+}
+
+export interface ScanRecordStore {
+  scans: ScanRecord[];
 }
 
 export interface QRCodeData {
@@ -53,9 +54,9 @@ export interface QRCodeData {
 
 export interface ScanResult {
   success: boolean;
+  count: number;
   data?: string;
   error?: string;
-  timestamp: string;
 }
 
 export interface ValidationResult {

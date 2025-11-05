@@ -3,7 +3,7 @@ import kafka from './kafka-client.js';
 import 'dotenv/config';
 import Datacubeservices from './datacube.services.js';
 import { v4 as uuidv4 } from 'uuid';
-import { connectToMongo } from './db.js';
+import { connectToMongo, closeMongo } from './db.js';
 import { getTokenInfo } from './tokenCache.js';
 
 // Environment variables from Docker Compose
@@ -15,6 +15,7 @@ const dbName = process.env.MONGO_DB_NAME || "qr_scans";
 let collection;
 let tokenCollection = false;
 let tokenData = false;
+let localScanCollection;
 const exhibitorCollection = process.env.MONGO_EXHIBITOR_COLL || 'exhibitors';
 const tokenCollectionName = process.env.MONGO_TOKEN_COLL || 'coll_tokens';
 
@@ -52,6 +53,9 @@ const run = async () => {
                     // data.exhibitorId = uuidv4();
                     collection = db.collection(exhibitorCollection);
                     tokenCollection = db.collection(tokenCollectionName);
+                    localScanCollection = db.collection(data.name+"_"+data.exhibitorId);
+                    // create unique index once
+                    await localScanCollection.createIndex({ data: 1 }, { unique: true });
                     tokenData = data.tokenDetails
                     delete data.tokenDetails;
                     console.log(`Targeting collection: ${collection.namespace}`);
@@ -125,6 +129,9 @@ const run = async () => {
                     console.log(`Successfully inserted token data with _id: ${tokenResult.insertedId} in collection: ${tokenCollection.namespace}`);
                 }
             } catch (err) {
+                if (err.code === 11000) {
+                    console.log("Duplicate ignored:", err.keyValue);
+                }
                 console.error('Error processing message or inserting into MongoDB:', err);
             }
         },
@@ -147,7 +154,7 @@ const shutdown = async () => {
         console.error('Error disconnecting Kafka consumer', e);
     }
     try {
-        await mongoClient.close();
+        await closeMongo();
         console.log('MongoDB connection closed.');
     } catch (e) {
         console.error('Error closing MongoDB connection', e);

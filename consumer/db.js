@@ -25,4 +25,10 @@ export async function connectToMongo(dbName) {
   return dbInstance;
 }
 
+export async function closeMongo() {
+  if (mongoClient) {
+    await mongoClient.close();
+    console.log("MongoDB connection closed.");
+  }
+}
 export { redis };

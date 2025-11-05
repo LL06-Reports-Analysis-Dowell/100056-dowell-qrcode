@@ -1,4 +1,4 @@
-import { Exhibition, Exhibitor, ScanRecord, QRCodeData, ValidationResult } from '@/types/exhibition';
+import { Exhibition, Exhibitor, ScanRecord, QRCodeData, ValidationResult, ScanResult, ScanRecordStore } from '@/types/exhibition';
 
 // Mock API base URL - in production this would be your backend API
 const API_BASE_URL = '/api';
@@ -241,41 +241,63 @@ export const exhibitorAPI = {
 
 // Scan API
 export const scanAPI = {
-  recordScan: async (exhibitorId: string, qrData: QRCodeData): Promise<ScanRecord> => {
-    await new Promise(resolve => setTimeout(resolve, 400));
+  recordScan: async (qrData: string): Promise<ScanResult> => {
     
-    const exhibitor = exhibitors.find(e => e.name === exhibitorId);
-    if (!exhibitor) {
-      throw new Error('Exhibitor not found');
+   const endpoint = `${BACKEND_URL}/api/v1/scans/batch`; // Adjust the endpoint path if necessary
+
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get('token');
+      console.log(`Token Params from QR scan: ${token}`);
+      
+      let tempData: ScanRecord = {
+        tokenId: token,
+        data: qrData
+      }
+      
+      let data: ScanRecordStore = {
+        scans: [tempData]
+      }
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          // Include authorization headers (e.g., JWT token) here if required by your backend
+          // 'Authorization': `Bearer ${localStorage.getItem('token')}`, 
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        // Attempt to parse error message from response body
+        const errorDetail = await response.text();
+        throw new Error(`Failed to record scan. Status: ${response.status}. Detail: ${errorDetail}`);
+      }
+
+      // The backend should return the fully created Exhibitor object
+      // const newExhibitor: Exhibitor = await response.json();
+      const res = await response.json();
+      const result: ScanResult = {
+        success: res.success,
+        count: res.count
+      };
+      return result;
+
+    } catch (error) {
+      console.error("API Call Error in scanAPI.recordScan:", error);
+      throw error; // Re-throw the error to be handled by the calling component (CreateExhibitorDialog)
     }
 
-    const scanRecord: ScanRecord = {
-      id: generateId(),
-      exhibitorId,
-      exhibitionId: exhibitor.name,
-      customer: {
-        id: qrData.customerId,
-        name: qrData.name,
-        email: qrData.email,
-        phoneNumber: qrData.phoneNumber,
-        company: qrData.company,
-        jobTitle: qrData.jobTitle
-      },
-      timestamp: new Date().toISOString()
-    };
-
-    scanRecords.push(scanRecord);
-    return scanRecord;
   },
 
   getScansByExhibitor: async (exhibitorId: string): Promise<ScanRecord[]> => {
     await new Promise(resolve => setTimeout(resolve, 300));
-    return scanRecords.filter(record => record.exhibitorId === exhibitorId);
+    return scanRecords.filter(record => record.tokenId === exhibitorId);
   },
 
   getScansByExhibition: async (exhibitionId: string): Promise<ScanRecord[]> => {
     await new Promise(resolve => setTimeout(resolve, 300));
-    return scanRecords.filter(record => record.exhibitionId === exhibitionId);
+    return scanRecords.filter(record => record.tokenId === exhibitionId);
   }
 };
 

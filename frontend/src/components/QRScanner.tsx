@@ -15,6 +15,7 @@ export const QRScanner = () => {
   console.log(`Token Params: ${token}`);
 
   const [exhibitor, setExhibitor] = useState<Exhibitor | null>(null);
+  const [triggerScan, setTriggerScan] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastScan, setLastScan] = useState<ScanResult | null>(null);
@@ -34,10 +35,10 @@ export const QRScanner = () => {
 
   // Auto-start scanning when exhibitor is validated
   useEffect(() => {
-    if (exhibitor && !isScanning && hasPermission !== false) {
+    if (triggerScan && !isScanning && hasPermission !== false) {
       startScanning();
     }
-  }, [exhibitor]);
+  }, [triggerScan]);
 
   const validateExhibitor = async () => {
     if (!token) {
@@ -74,7 +75,7 @@ export const QRScanner = () => {
         return;
       }
 
-      // setExhibitor(exhibitorData);
+      setTriggerScan(true);
       setError(null);
     } catch (err) {
       setError('Failed to validate scanner access');
@@ -87,18 +88,23 @@ export const QRScanner = () => {
     setLastScan(result);
 
 
-    if (result.success && result.data && exhibitor) {
+    if (result.success && result.data && triggerScan) {
       try {
         // await api.scans.recordScan(exhibitor.id, result.data);
         setScanCount(prev => prev + 1);
-
         toast({
           title: "Scan Successful!",
           description: `Captured data for ${result.data}`,
         });
+        const scanRecord = await api.scans.recordScan(JSON.stringify(result.data));
+
+        toast({
+          title: "Scan Saving Successful!",
+          description: `Saved data. Status: success=${scanRecord.success}, count=${scanRecord.count}`,
+        });
       } catch (error) {
         let h = JSON.stringify(result, null, 2)
-        console.log(h);
+        console.log(`This is the qr data:${h}, this is the error: ${error}`);
         toast({
           title: "Error",
           description: `Failed to save scan data ${h}`,
@@ -106,6 +112,7 @@ export const QRScanner = () => {
         });
       }
     } else {
+      console.log(`This error is caused by: ${result.success}, ${result.data}, ${triggerScan}`);
       toast({
         title: "Invalid QR Code",
         description: result.error || "Could not read customer data",
