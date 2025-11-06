@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Users, Building, Mail, Phone, Calendar } from 'lucide-react';
+import { Users, Building, Mail, Phone, Calendar, Ticket } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -22,6 +22,7 @@ export const CreateExhibitorDialog = ({ open, onOpenChange, onSuccess }: CreateE
     name: '',
     company: '',
     email: '',
+    exhibitionName:'',
     phoneNumber: '',
     startDate: '',
     endDate: '',
@@ -59,6 +60,7 @@ export const CreateExhibitorDialog = ({ open, onOpenChange, onSuccess }: CreateE
         name: '',
         company: '',
         email: '',
+        exhibitionName: '',
         phoneNumber: '',
         startDate: '',
         endDate: '',
@@ -139,6 +141,21 @@ export const CreateExhibitorDialog = ({ open, onOpenChange, onSuccess }: CreateE
                 placeholder="e.g., john@acme.com"
                 value={formData.email}
                 onChange={(e) => updateField('email', e.target.value)}
+                className="pl-10"
+                required
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="exhibitionName">Exhibition Name *</Label>
+            <div className="relative">
+              <Ticket className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="exhibitionName"
+                placeholder="e.g., Tech-Expo 2025"
+                value={formData.exhibitionName}
+                onChange={(e) => updateField('exhibitionName', e.target.value)}
                 className="pl-10"
                 required
               />

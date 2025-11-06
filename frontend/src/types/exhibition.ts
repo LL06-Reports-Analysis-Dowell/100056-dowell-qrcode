@@ -14,11 +14,12 @@ export interface Exhibitor {
   name: string;
   company: string;
   email: string;
+  exhibitionName: string;
   phoneNumber?: string;
   domainName: string;
   startDate: string;
 	endDate: string;
-	status: string;
+	isActive: boolean;
 }
 
 export interface Customer {

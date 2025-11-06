@@ -158,11 +158,6 @@ export const useQRScanner = (options: UseQRScannerOptions = {}) => {
     }
   }, []);
 
-  const toggleScanning = useCallback(() => {
-    if (isScanning) stopScanning();
-    else startScanning();
-  }, []);
-
   // Start scanning when enabled
   useEffect(() => {
     if (isScanning) {
@@ -184,7 +179,6 @@ export const useQRScanner = (options: UseQRScannerOptions = {}) => {
     error,
     hasPermission,
     startScanning,
-    stopScanning,
-    toggleScanning
+    stopScanning
   };
 };
