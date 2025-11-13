@@ -6,20 +6,15 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { Exhibition, Exhibitor } from '@/types/exhibition';
+import { Exhibition, Exhibitor, ExhibitorResults } from '@/types/exhibition';
 import { api } from '@/lib/api';
 import { format } from 'date-fns';
 import { CreateExhibitorDialog } from '@/components/CreateExhibitorDialog';
 
-interface ExhibitorWithExhibition extends Exhibitor {
-  exhibitionName: string;
-  startDate: string;
-  endDate: string;
-}
 
 export const AdminDashboard = () => {
-  const [exhibitors, setExhibitors] = useState<ExhibitorWithExhibition[]>([]);
-  const [filteredExhibitors, setFilteredExhibitors] = useState<ExhibitorWithExhibition[]>([]);
+  const [exhibitors, setExhibitors] = useState<ExhibitorResults[]>([]);
+  const [filteredExhibitors, setFilteredExhibitors] = useState<ExhibitorResults[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [startDateFilter, setStartDateFilter] = useState('');
   const [endDateFilter, setEndDateFilter] = useState('');
@@ -41,20 +36,17 @@ export const AdminDashboard = () => {
       const exhibitions = await api.exhibitions.getAll();
       
       // Load all exhibitors with their exhibition info
-      const allExhibitors: ExhibitorWithExhibition[] = [];
-      for (const expo of exhibitions) {
-        const expoExhibitors = await api.exhibitors.getByExhibition(expo.id);
-        const exhibitorsWithExpo = expoExhibitors.map(exhibitor => ({
-          ...exhibitor,
-          exhibitionName: expo.name,
-          startDate: expo.startDate,
-          endDate: expo.endDate
-        }));
-        allExhibitors.push(...exhibitorsWithExpo);
-      }
+      const allExhibitors: ExhibitorResults[] = [];
+      const expoExhibitors = await api.exhibitors.getAllExhibitors();
+      const exhibitorsWithExpo = expoExhibitors.map(exhibitor => ({
+        ...exhibitor,
+      }));
+      allExhibitors.push(...exhibitorsWithExpo);
+      
       
       setExhibitors(allExhibitors);
       setFilteredExhibitors(allExhibitors);
+      console.log("This is the filtered data:",filteredExhibitors)
     } catch (error) {
       toast({
         title: "Error",
@@ -134,6 +126,27 @@ export const AdminDashboard = () => {
     }
   };
 
+  type DateType = "start" | "end";
+
+const handleDateChange = (
+  e: React.ChangeEvent<HTMLInputElement>,
+  type: DateType
+) => {
+  const value = e.target.value;
+  const dateObj = new Date(value);
+
+  if (!value || isNaN(dateObj.getTime())) {
+    if (type === "start") setStartDateFilter("");
+    else setEndDateFilter("");
+    return;
+  }
+
+  const formatted = dateObj.toISOString().split("T")[0];
+
+  if (type === "start") setStartDateFilter(formatted);
+  else setEndDateFilter(formatted);
+};
+
   const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
@@ -162,7 +175,7 @@ export const AdminDashboard = () => {
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-              <p className="text-muted-foreground">Loading exhibitors...</p>
+              <p className="text-muted-foreground">Loading team members...</p>
             </div>
           </div>
         </div>
@@ -177,15 +190,15 @@ export const AdminDashboard = () => {
         <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold mb-1">Exhibitor Management</h1>
-              <p className="text-muted-foreground">Manage exhibitor access and scanner URLs</p>
+              <h1 className="text-3xl font-bold mb-1">Team Management</h1>
+              <p className="text-muted-foreground">Manage team member access and scanner URLs</p>
             </div>
             <Button
               size="lg"
               onClick={() => setIsDialogOpen(true)}
             >
               <Plus className="mr-2 h-5 w-5" />
-              Add Exhibitor
+              Add Member
             </Button>
           </div>
         </div>
@@ -212,8 +225,8 @@ export const AdminDashboard = () => {
               <Input
                 type="date"
                 placeholder="Start Date From"
-                value={startDateFilter}
-                onChange={(e) => setStartDateFilter(e.target.value)}
+                value={startDateFilter || ""}
+                onChange={(e) => handleDateChange(e,"start")}
                 className="pl-10 pr-4 py-6 text-base"
               />
             </div>
@@ -222,8 +235,8 @@ export const AdminDashboard = () => {
               <Input
                 type="date"
                 placeholder="End Date Until"
-                value={endDateFilter}
-                onChange={(e) => setEndDateFilter(e.target.value)}
+                value={endDateFilter || ""}
+                onChange={(e) => handleDateChange(e,"end")}
                 className="pl-10 pr-4 py-6 text-base"
               />
             </div>
@@ -232,7 +245,7 @@ export const AdminDashboard = () => {
 
         {/* Exhibitor Cards Grid */}
         {filteredExhibitors.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          <div className="flex flex-col gap-6">
             {filteredExhibitors.map((exhibitor) => (
               <Card key={exhibitor.id} className="shadow-sm hover:shadow-md transition-shadow">
                 <CardHeader className="pb-3">
@@ -260,35 +273,45 @@ export const AdminDashboard = () => {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  {/* Email */}
-                  <div>
-                    <p className="text-xs font-medium text-muted-foreground mb-1">Email</p>
-                    <p className="text-sm break-all">{exhibitor.email}</p>
-                  </div>
-
-                  {/* Exhibition Name */}
-                  <div>
-                    <p className="text-xs font-medium text-muted-foreground mb-1">Exhibition Name</p>
-                    <p className="text-sm">{exhibitor.exhibitionName}</p>
-                  </div>
-
-                  {/* Phone Number */}
-                  {exhibitor.phoneNumber && (
-                    <div>
-                      <p className="text-xs font-medium text-muted-foreground mb-1">Phone Number</p>
-                      <p className="text-sm">{exhibitor.phoneNumber}</p>
-                    </div>
-                  )}
-
-                  {/* Dates */}
                   <div className="grid grid-cols-2 gap-3">
+                    {/* Email */}
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground mb-1">Email</p>
+                      <p className="text-sm break-all">{exhibitor.email}</p>
+                    </div>
+
+                    {/* Exhibition */}
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground mb-1">Exhibition</p>
+                      <p className="text-sm">{exhibitor.exhibitionName}</p>
+                    </div>
+
+                    {/* Phone */}
+                    {exhibitor.phoneNumber && (
+                      <div>
+                        <p className="text-xs font-medium text-muted-foreground mb-1">Phone</p>
+                        <p className="text-sm">{exhibitor.phoneNumber}</p>
+                      </div>
+                    )}
+
+                    {/* Start Date */}
                     <div>
                       <p className="text-xs font-medium text-muted-foreground mb-1">Start Date</p>
-                      <p className="text-sm">{format(new Date(exhibitor.startDate), 'MMM dd, yyyy')}</p>
+                      <p className="text-sm">
+                        {exhibitor.startDate
+                          ? new Date(exhibitor.startDate).toLocaleDateString()
+                          : '—'}
+                      </p>
                     </div>
+
+                    {/* End Date */}
                     <div>
                       <p className="text-xs font-medium text-muted-foreground mb-1">End Date</p>
-                      <p className="text-sm">{format(new Date(exhibitor.endDate), 'MMM dd, yyyy')}</p>
+                      <p className="text-sm">
+                        {exhibitor.endDate
+                          ? new Date(exhibitor.endDate).toLocaleDateString()
+                          : '—'}
+                      </p>
                     </div>
                   </div>
 
@@ -297,12 +320,12 @@ export const AdminDashboard = () => {
                     <p className="text-xs font-medium text-muted-foreground mb-2">Scanner URL</p>
                     <div className="flex items-center gap-2">
                       <code className="flex-1 text-xs bg-muted px-2 py-1.5 rounded border truncate">
-                        {truncateUrl(exhibitor.scannerUrl)}
+                        {truncateUrl(exhibitor.url)}
                       </code>
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => copyToClipboard(exhibitor.scannerUrl)}
+                        onClick={() => copyToClipboard(exhibitor.url)}
                         className="shrink-0"
                       >
                         <Copy className="h-3.5 w-3.5" />
@@ -322,6 +345,7 @@ export const AdminDashboard = () => {
                     />
                   </div>
                 </CardContent>
+
               </Card>
             ))}
           </div>

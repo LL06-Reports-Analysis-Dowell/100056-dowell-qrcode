@@ -55,7 +55,7 @@ const run = async () => {
                     tokenCollection = db.collection(tokenCollectionName);
                     localScanCollection = db.collection(data.name+"_"+data.exhibitorId);
                     // create unique index once
-                    await localScanCollection.createIndex({ data: 1 }, { unique: true });
+                    // await localScanCollection.createIndex({ data: 1 }, { unique: true });
                     tokenData = data.tokenDetails
                     delete data.tokenDetails;
                     console.log(`Targeting collection: ${collection.namespace}`);

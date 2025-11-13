@@ -16,10 +16,24 @@ export interface Exhibitor {
   email: string;
   exhibitionName: string;
   phoneNumber?: string;
-  domainName: string;
+  domainName?: string;
   startDate: string;
 	endDate: string;
 	isActive: boolean;
+}
+
+export interface ExhibitorResults extends Exhibitor {
+  url: string;
+  id: number;
+  exhibitorId?: string;
+  _id?: string;
+}
+
+
+export interface ExhibitorResponse {
+  success: boolean,
+  data: ExhibitorResults[],
+  message: string
 }
 
 export interface Customer {
@@ -33,11 +47,10 @@ export interface Customer {
 
 export interface ScanRecord {
   tokenId: string;
+  qrId: string;
   data: string;
-  location?: {
-    latitude: number;
-    longitude: number;
-  };
+  latitude: number;
+  longitude: number;
 }
 
 export interface ScanRecordStore {

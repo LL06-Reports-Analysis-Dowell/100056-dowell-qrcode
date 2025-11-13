@@ -23,7 +23,7 @@ export const QRScanner = () => {
 
   const { toast } = useToast();
 
-  const { videoRef, canvasRef, isScanning, startScanning, stopScanning, hasPermission } = useQRScanner({
+  const { videoRef, canvasRef, isScanning, startScanning, stopScanning, hasPermission, toggleScanning } = useQRScanner({
     onScan: handleScan,
     continuous: true,
     facingMode: 'environment'
@@ -96,6 +96,7 @@ export const QRScanner = () => {
           title: "Scan Successful!",
           description: `Captured data for ${result.data}`,
         });
+        stopScanning();
         const scanRecord = await api.scans.recordScan(JSON.stringify(result.data));
 
         toast({
@@ -198,11 +199,11 @@ export const QRScanner = () => {
                 />
 
                 {/* Overlay */}
-                <div className="absolute inset-0 flex items-center justify-center">
+                <div className="absolute inset-0 flex items-center justify-center" onClick={toggleScanning}>
                   <div className="border-2 border-white border-dashed rounded-lg w-64 h-64 flex items-center justify-center">
                     <div className="text-white text-center">
                       <Scan className="h-8 w-8 mx-auto mb-2 opacity-75" />
-                      <p className="text-sm opacity-75">Position QR code here</p>
+                      <p className="text-sm opacity-75">{isScanning ? "Position QR code here" : "Tap to Scan"}</p>
                     </div>
                   </div>
                 </div>

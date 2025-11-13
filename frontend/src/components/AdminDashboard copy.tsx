@@ -244,12 +244,12 @@ export const AdminDashboard = () => {
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-xs font-medium text-muted-foreground mb-1">Scanner URL</p>
-                          <p className="text-sm font-mono break-all">{exhibitor.scannerUrl}</p>
+                          <p className="text-sm font-mono break-all">{exhibitor.url}</p>
                         </div>
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => copyToClipboard(exhibitor.scannerUrl)}
+                          onClick={() => copyToClipboard(exhibitor.url)}
                         >
                           <Copy className="h-4 w-4" />
                         </Button>

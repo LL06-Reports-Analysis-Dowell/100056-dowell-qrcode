@@ -51,14 +51,7 @@ const Index = () => {
             Start Scanning
           </Link>
         </Button>
-
-        {/* Admin Link */}
-        <p className="text-xs text-muted-foreground">
-          Are you an admin?{' '}
-          <Link to="/admin" className="text-primary hover:underline">
-            Go to Dashboard
-          </Link>
-        </p>
+        
       </div>
     </div>
   );

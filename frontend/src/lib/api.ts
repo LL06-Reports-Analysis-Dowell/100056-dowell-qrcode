@@ -1,4 +1,4 @@
-import { Exhibition, Exhibitor, ScanRecord, QRCodeData, ValidationResult, ScanResult, ScanRecordStore } from '@/types/exhibition';
+import { Exhibition, Exhibitor, ScanRecord, QRCodeData, ValidationResult, ScanResult, ScanRecordStore, ExhibitorResults, ExhibitorResponse } from '@/types/exhibition';
 
 // Mock API base URL - in production this would be your backend API
 const API_BASE_URL = '/api';
@@ -38,18 +38,7 @@ let exhibitions: Exhibition[] = [
   }
 ];
 
-let exhibitors: Exhibitor[] = [
-  {
-	name: "HeenaKhan",
-	company: "Programmer",
-	email:"khanheena4997@gmail.com",
-	phoneNumber:"1234567890",
-	startDate: "24-10-2025",
-	endDate: "25-10-2025",
-	status: "active",
-  domainName: window.location.origin
-}
-];
+let exhibitors: Exhibitor[];
 
 let scanRecords: ScanRecord[] = [];
 
@@ -111,6 +100,61 @@ export const exhibitionAPI = {
 
 // Exhibitor API
 export const exhibitorAPI = {
+  getAllExhibitors: async (): Promise<ExhibitorResults[]> => {
+    const endpoint = `${BACKEND_URL}/api/v1/scans/exhibitors?filters={}`; // Adjust the endpoint path if necessary
+    
+    try {
+      const response = await fetch(endpoint, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          // Include authorization headers (e.g., JWT token) here if required by your backend
+          // 'Authorization': `Bearer ${localStorage.getItem('token')}`, 
+        },
+        
+      });
+
+      if (!response.ok) {
+        // Attempt to parse error message from response body
+        const errorDetail = await response.text();
+        throw new Error(`Failed to fetch exhibitors. Status: ${response.status}. Detail: ${errorDetail}`);
+      }
+
+      // The backend should return the fully created Exhibitor object
+      // const newExhibitor: Exhibitor = await response.json();
+      const res: ExhibitorResponse = await response.json();
+      const results: ExhibitorResults[] = [];
+      console.log(`This is the API response: ${res.data}`)
+      let count = 0;
+      for (let item in res.data) {
+        count = count+1
+        console.log(item)
+        results.push({
+          id: count,
+          name: res.data[item].name,
+          company: res.data[item].company,
+          email: res.data[item].email,
+          exhibitionName: res.data[item].exhibitionName,
+          phoneNumber: res.data[item].phoneNumber,
+          startDate: res.data[item].startDate,
+          endDate: res.data[item].endDate,
+          isActive: res.data[item].isActive,
+          url: res.data[item].url 
+        }
+          
+        )
+      }
+      console.table(res.data)
+      console.table(results)
+      console.log(`THE RESULTS: ${results[0].name}`)
+      return results;
+
+    } catch (error) {
+      console.error("API Call Error in exhibitorAPI.getAllExhibitors:", error);
+      throw error; // Re-throw the error to be handled by the calling component (CreateExhibitorDialog)
+    }
+  },
+
   getByExhibition: async (exhibitionId: string): Promise<Exhibitor[]> => {
     await new Promise(resolve => setTimeout(resolve, 300));
     return exhibitors.filter(exhibitor => exhibitor.name === exhibitionId);
@@ -241,7 +285,7 @@ export const exhibitorAPI = {
 
 // Scan API
 export const scanAPI = {
-  recordScan: async (qrData: string): Promise<ScanResult> => {
+  recordScan: async (qrData: string, qrId: string, latitude: number, longitude: number): Promise<ScanResult> => {
     
    const endpoint = `${BACKEND_URL}/api/v1/scans/batch`; // Adjust the endpoint path if necessary
 
@@ -252,6 +296,9 @@ export const scanAPI = {
       
       let tempData: ScanRecord = {
         tokenId: token,
+        qrId: qrId,
+        latitude: latitude,
+        longitude: longitude,
         data: qrData
       }
       
