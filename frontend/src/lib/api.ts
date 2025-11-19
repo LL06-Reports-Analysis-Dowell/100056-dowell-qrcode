@@ -285,7 +285,7 @@ export const exhibitorAPI = {
 
 // Scan API
 export const scanAPI = {
-  recordScan: async (qrData: string, qrId: string, latitude: number, longitude: number): Promise<ScanResult> => {
+  recordScan: async (qrData: string, qrId: string, scannerId: string, latitude: number, longitude: number): Promise<ScanResult> => {
     
    const endpoint = `${BACKEND_URL}/api/v1/scans/batch`; // Adjust the endpoint path if necessary
 
@@ -297,6 +297,7 @@ export const scanAPI = {
       let tempData: ScanRecord = {
         tokenId: token,
         qrId: qrId,
+        scannerId: scannerId,
         latitude: latitude,
         longitude: longitude,
         data: qrData

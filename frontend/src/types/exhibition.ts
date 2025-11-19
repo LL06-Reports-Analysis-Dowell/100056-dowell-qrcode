@@ -48,6 +48,7 @@ export interface Customer {
 export interface ScanRecord {
   tokenId: string;
   qrId: string;
+  scannerId: string;
   data: string;
   latitude: number;
   longitude: number;

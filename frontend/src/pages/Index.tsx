@@ -1,9 +1,11 @@
+import { useState, useEffect } from "react";
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { QrCode } from 'lucide-react';
 // import { useParams, useSearchParams, useLocation, urlSearchParams } from 'react-router-dom';
 
 const Index = () => {
+  const [scannerId, setScannerId] = useState(""); 
   const params = new URLSearchParams(window.location.search);
   const token = params.get('token');
   console.log(`Token Params from Index.tsx: ${token}`);
@@ -44,10 +46,26 @@ const Index = () => {
             </li>
           </ul>
         </div>
-
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-muted-foreground">
+            Scanner ID (your ID)
+          </label>
+          <input
+            type="text"
+            placeholder="Enter your scanner ID"
+            value={scannerId}
+            onChange={(e) => setScannerId(e.target.value)}
+            className="w-full"
+          />
+        </div>
         {/* Start Scanning Button */}
-        <Button asChild size="lg" className="w-full">
-          <Link to={`/scanner/?token=${token}`}>
+        <Button
+          asChild
+          size="lg"
+          className="w-full"
+          disabled={!scannerId.trim()}  // prevents navigation without ID
+        >
+          <Link to={`/scanner/?token=${token}&scannerId=${scannerId}`}>
             Start Scanning
           </Link>
         </Button>

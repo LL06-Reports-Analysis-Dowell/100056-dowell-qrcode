@@ -10,6 +10,7 @@ import { api } from "@/lib/api";
 export const QRScanner = () => {
     const params = new URLSearchParams(window.location.search);
     const token = params.get("token");
+    const scannerId = params.get("scannerId") || "";
 
     const [userId, setUserId] = useState(""); // ✅ user input ID
     const [location, setLocation] = useState({lat: "", lon: ""})
@@ -107,7 +108,7 @@ export const QRScanner = () => {
             console.log("Scan payload:", payload);
 
             try {
-                const res = await api.scans.recordScan(JSON.stringify(payload),userId,location.lat,location.lon);
+                const res = await api.scans.recordScan(JSON.stringify(payload),userId,scannerId,location.lat,location.lon);
                 toast({
                     title: "✅ Scan Successful",
                     description: `Data for ${userId} recorded.`,
